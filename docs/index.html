@@ -35,6 +35,8 @@
 .ghostbtn:hover{background:rgba(255,255,255,.12)}
 .privacy{margin:16px auto 0;max-width:520px;font-size:.86rem;color:var(--muted,#9aa2ad)}
 .privacy b{color:#c3e86a}
+.restore{margin:14px auto 0;max-width:540px;font-size:.85rem;color:var(--muted,#9aa2ad)}
+.restore b{color:#f4f7ee}
 #errbox{max-width:620px;margin:18px auto 0;text-align:left;background:rgba(229,72,77,.08);border:1px solid rgba(229,72,77,.35);
   border-radius:14px;padding:16px 18px}
 #errbox .err-h{font-weight:700;color:#ff9a9d;margin-bottom:8px}
@@ -61,7 +63,7 @@
 <div id="viewerbar" hidden>
   <span class="vb-you">Viewing <b id="vb-name">your bracket</b></span>
   <button id="vb-replace" title="Upload or pick a different bracket">Replace</button>
-  <button id="vb-export" title="Download this bracket as JSON">Export JSON</button>
+  <button id="vb-export" title="Download this bracket as a JSON backup — re-import it later (e.g. on another device) without the Excel">Export JSON</button>
   <button id="vb-clear" title="Clear and start over">Clear</button>
 </div>
 
@@ -81,10 +83,11 @@
   <div class="btnrow">
     <button class="bigbtn" id="pick">Choose file…</button>
     <button class="ghostbtn" id="demo">Try the demo bracket</button>
-    <button class="ghostbtn" id="import">Import JSON</button>
   </div>
   <input id="file" type="file" accept=".xlsx,.xlsm" hidden>
   <input id="importfile" type="file" accept=".json,application/json" hidden>
+
+  <p class="restore">Been here before and <b>exported</b> your bracket? <button class="linkbtn" id="import">Restore it from JSON</button> instead of re-uploading the Excel.</p>
 
   <p class="privacy">🔒 Your file is read <b>right here in your browser</b> — it is never uploaded anywhere.
   Live match results are the only thing fetched (a small JSON in this repo).</p>
