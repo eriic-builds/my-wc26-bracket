@@ -16,7 +16,7 @@ async function loadData() {
   TOPO = t; LIVE = l;
 }
 
-function showDashboard(picks) {
+function showDashboard(picks, isDemo = false) {
   resetWhatIfsIfChanged(picks);
   const app = $("#app");
   app.innerHTML = renderDashboard(picks, LIVE, TOPO);
@@ -24,13 +24,13 @@ function showDashboard(picks) {
   app.hidden = false;
   $("#viewerbar").hidden = false;
   $("#dab").hidden = false;
-  $("#vb-name").textContent = picks.entrant || "your bracket";
+  $("#vb-name").textContent = (picks.entrant || "your bracket") + (isDemo ? " (demo)" : "");
   initInteractions();                                  // run the verbatim interaction layer
   if (window.__drawConn) setTimeout(window.__drawConn, 90);  // initial connector draw
   window.scrollTo(0, 0);
 }
 
-function accept(picks) { savePicks(picks); showDashboard(picks); }
+function accept(picks) { savePicks(picks); showDashboard(picks); }   // real bracket -> persist
 
 function showError(problems) {
   const box = $("#errbox");
@@ -55,7 +55,7 @@ async function handleFile(file) {
 async function onDemo() {
   try {
     const picks = await fetch("data/demo-picks.json").then(r => r.json());
-    accept(picks);
+    showDashboard(picks, true);   // preview only — the demo is not saved as "your" bracket
   } catch (e) { showError(["Couldn\u2019t load the demo bracket."]); }
 }
 
