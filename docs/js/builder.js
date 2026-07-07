@@ -106,6 +106,7 @@ export function openBuilder(topology, onDone, onCancel, resume = true) {
         <div class="bld-fh">${sel[S.finalcode] ? "\u{1F3C6} Champion: <b>" + esc(sel[S.finalcode]) + "</b>" : "Pick your champion above"}</div>
         <label class="bld-field"><span>Your name</span><input id="bld-name" type="text" maxlength="40" placeholder="e.g. Alex" value="${esc(entrant)}"></label>
         <label class="bld-field"><span>Tiebreaker <small>(total goals in the Final)</small></span><input id="bld-tb" type="number" min="0" max="20" placeholder="e.g. 3" value="${esc(tiebreaker)}"></label>
+        <div class="bld-note">\u{1F512} Your bracket saves right here in <b>this browser</b> \u2014 nothing gets uploaded. Want a backup or to open it on another device? Tap <b>Save a copy</b> on your dashboard to download a file you can reopen anytime.</div>
       </div>` : "";
     host.querySelector(".bld-inner").innerHTML = `
       <div class="bld-head">
