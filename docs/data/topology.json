@@ -1,0 +1,314 @@
+{
+ "ko_feed": {
+  "M89": [
+   "M74",
+   "M77"
+  ],
+  "M90": [
+   "M73",
+   "M75"
+  ],
+  "M91": [
+   "M76",
+   "M78"
+  ],
+  "M92": [
+   "M79",
+   "M80"
+  ],
+  "M93": [
+   "M83",
+   "M84"
+  ],
+  "M94": [
+   "M81",
+   "M82"
+  ],
+  "M95": [
+   "M86",
+   "M88"
+  ],
+  "M96": [
+   "M85",
+   "M87"
+  ],
+  "M97": [
+   "M89",
+   "M90"
+  ],
+  "M98": [
+   "M93",
+   "M94"
+  ],
+  "M99": [
+   "M91",
+   "M92"
+  ],
+  "M100": [
+   "M95",
+   "M96"
+  ],
+  "M101": [
+   "M97",
+   "M98"
+  ],
+  "M102": [
+   "M99",
+   "M100"
+  ],
+  "M104": [
+   "M101",
+   "M102"
+  ]
+ },
+ "ko_dates": {
+  "r16": "Jul 4–7",
+  "qf": "Jul 9–11",
+  "sf": "Jul 14–15",
+  "final": "Sun Jul 19 · MetLife"
+ },
+ "r32": [
+  [
+   "M74",
+   "Mon 6/29",
+   "Germany",
+   "Paraguay"
+  ],
+  [
+   "M77",
+   "Tue 6/30",
+   "France",
+   "Sweden"
+  ],
+  [
+   "M73",
+   "Sun 6/28",
+   "South Africa",
+   "Canada"
+  ],
+  [
+   "M75",
+   "Mon 6/29",
+   "Netherlands",
+   "Morocco"
+  ],
+  [
+   "M83",
+   "Thu 7/2",
+   "Portugal",
+   "Croatia"
+  ],
+  [
+   "M84",
+   "Thu 7/2",
+   "Spain",
+   "Austria"
+  ],
+  [
+   "M81",
+   "Wed 7/1",
+   "United States",
+   "Bosnia & Herz."
+  ],
+  [
+   "M82",
+   "Wed 7/1",
+   "Belgium",
+   "Senegal"
+  ],
+  [
+   "M76",
+   "Mon 6/29",
+   "Brazil",
+   "Japan"
+  ],
+  [
+   "M78",
+   "Tue 6/30",
+   "Ivory Coast",
+   "Norway"
+  ],
+  [
+   "M79",
+   "Tue 6/30",
+   "Mexico",
+   "Ecuador"
+  ],
+  [
+   "M80",
+   "Wed 7/1",
+   "England",
+   "DR Congo"
+  ],
+  [
+   "M86",
+   "Fri 7/3",
+   "Argentina",
+   "Cape Verde"
+  ],
+  [
+   "M88",
+   "Fri 7/3",
+   "Australia",
+   "Egypt"
+  ],
+  [
+   "M85",
+   "Thu 7/2",
+   "Switzerland",
+   "Algeria"
+  ],
+  [
+   "M87",
+   "Fri 7/3",
+   "Colombia",
+   "Ghana"
+  ]
+ ],
+ "seed": {
+  "Germany": "1E",
+  "Paraguay": "3rd",
+  "France": "1I",
+  "Sweden": "3rd",
+  "South Africa": "2A",
+  "Canada": "2B",
+  "Netherlands": "1F",
+  "Morocco": "2C",
+  "Portugal": "2K",
+  "Croatia": "2L",
+  "Spain": "1H",
+  "Austria": "2J",
+  "United States": "1D",
+  "Bosnia & Herz.": "3rd",
+  "Belgium": "1G",
+  "Senegal": "3rd",
+  "Brazil": "1C",
+  "Japan": "2F",
+  "Ivory Coast": "2E",
+  "Norway": "2I",
+  "Mexico": "1A",
+  "Ecuador": "3rd",
+  "England": "1L",
+  "DR Congo": "3rd",
+  "Argentina": "1J",
+  "Cape Verde": "2H",
+  "Australia": "2D",
+  "Egypt": "2G",
+  "Switzerland": "1B",
+  "Algeria": "3rd",
+  "Colombia": "1K",
+  "Ghana": "3rd"
+ },
+ "r32_times": {
+  "M84": [
+   "Thu Jul 2",
+   "3:00 PM",
+   "2:00 PM",
+   "12:00 PM"
+  ],
+  "M83": [
+   "Thu Jul 2",
+   "7:00 PM",
+   "6:00 PM",
+   "4:00 PM"
+  ],
+  "M85": [
+   "Thu Jul 2",
+   "11:00 PM",
+   "10:00 PM",
+   "8:00 PM"
+  ],
+  "M88": [
+   "Fri Jul 3",
+   "2:00 PM",
+   "1:00 PM",
+   "11:00 AM"
+  ],
+  "M86": [
+   "Fri Jul 3",
+   "6:00 PM",
+   "5:00 PM",
+   "3:00 PM"
+  ],
+  "M87": [
+   "Fri Jul 3",
+   "9:30 PM",
+   "8:30 PM",
+   "6:30 PM"
+  ]
+ },
+ "r16_fix": [
+  [
+   "M90",
+   "Sat Jul 4",
+   "Canada",
+   "Morocco",
+   "1:00 PM",
+   "12:00 PM",
+   "10:00 AM"
+  ],
+  [
+   "M89",
+   "Sat Jul 4",
+   "Paraguay",
+   "France",
+   "5:00 PM",
+   "4:00 PM",
+   "2:00 PM"
+  ],
+  [
+   "M91",
+   "Sun Jul 5",
+   "Brazil",
+   "Norway",
+   "4:00 PM",
+   "3:00 PM",
+   "1:00 PM"
+  ],
+  [
+   "M92",
+   "Sun Jul 5",
+   "Mexico",
+   "England",
+   "8:00 PM",
+   "7:00 PM",
+   "5:00 PM"
+  ],
+  [
+   "M93",
+   "Mon Jul 6",
+   "Portugal / Croatia",
+   "Spain / Austria",
+   "3:00 PM",
+   "2:00 PM",
+   "12:00 PM"
+  ],
+  [
+   "M94",
+   "Mon Jul 6",
+   "United States",
+   "Belgium",
+   "8:00 PM",
+   "7:00 PM",
+   "5:00 PM"
+  ],
+  [
+   "M95",
+   "Tue Jul 7",
+   "Argentina / Cape Verde",
+   "Australia / Egypt",
+   "12:00 PM",
+   "11:00 AM",
+   "9:00 AM"
+  ],
+  [
+   "M96",
+   "Tue Jul 7",
+   "Switzerland / Algeria",
+   "Colombia / Ghana",
+   "4:00 PM",
+   "3:00 PM",
+   "1:00 PM"
+  ]
+ ]
+}
