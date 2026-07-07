@@ -626,7 +626,7 @@ export function renderDashboard(picks, live, topology) {
   const syncBtn = D.SYNC_URL ? `<a class="synbtn glass" id="syncBtn" href="${esc(D.SYNC_URL)}" target="_blank" rel="noopener" title="Pull the latest results"><span class="syn-ic">\u{1F504}</span><span class="syn-tx">Sync now</span></a>` : "";
   return '<div class="topbar"><div class="brand"><span class="orb"></span><div>2026 FIFA World Cup - Bracket Dashboard - MSFT SLED<small>Live results vs your picks</small></div></div>' +
     '<div class="upd-group">' +
-    `<div class="refreshed glass" id="topRefreshed" title="When live results were last synced"><span class="rf-dot"></span>Updated ${D.REFRESHED}</div>` +
+    `<div class="refreshed glass" id="topRefreshed" title="Results auto-sync from FIFA\u2019s live feed a few times a day \u2014 no manual refresh needed"><span class="rf-dot"></span>Live \u00b7 updated ${D.REFRESHED}</div>` +
     syncBtn + '</div>' +
     '<div class="modes glass">' +
     '<div class="theme-toggle" role="group" aria-label="Light or dark theme">' +
@@ -673,6 +673,7 @@ export function renderDashboard(picks, live, topology) {
     `<div class="kpigrid">${buildKpis(D)}</div>` + '</div>' +
     shead("sec-scorecard", "\u{1F9EE}", "Scorecard \u2014 your path, scored live", `${D.CONF} confirmed \u00b7 ${D.LIVE} live`) +
     '<div class="note"><b>How this is scored.</b> Results are pulled from live web coverage (ESPN, CBS Sports, FIFA) and matched to your Excel picks. ' +
+    'A background job <b>auto-syncs the live feed a few times a day</b>, so scores update on their own \u2014 no refresh needed. ' +
     `The <b>${esc(D.CUR_LABEL)}</b> stands at <b>${D.CUR_DONE} of ${D.CUR_TOTAL}</b> \u2014 you sit on <b>${D.CONF} points</b> (${D.CUR_CORR}/${D.CUR_DEC} right this round). ` +
     `${esc(D.LIVE_STATUS)} Later rounds stay <b>pending</b> until they\u2019re played. ` +
     'Flip any row yourself as games finish \u2014 totals recompute and save on this device.</div>' +
@@ -709,7 +710,7 @@ export function renderDashboard(picks, live, topology) {
     '</div><div style="font-size:.8rem;color:var(--muted);margin-top:12px;line-height:1.5">Each pick scored on its own; Champion is worth a full 16. ' +
     `Tiebreaker: total goals in the Final at the end of extra time \u2014 penalties don\u2019t count. Your tiebreaker: <b>${esc(D.TIEBREAKER)}</b>.</div></div>` +
     '<div class="glass" style="padding:20px"><div style="font-weight:700;margin-bottom:4px">Where the tournament stands</div>' +
-    `<div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Live results as of ${D.REFRESHED}</div>` +
+    `<div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Live results as of ${D.REFRESHED} \u00b7 auto-syncs a few times a day</div>` +
     `<div class="stages" style="grid-template-columns:1fr;padding:0;gap:8px">${buildStages(D)}</div></div></div>` + '</div>' +
     '<div class="glass foot"><b>Sources.</b> Your picks, scoring, tiebreaker and any host bonus rule from your <b>SLED World Cup 2026 bracket workbook</b> and the challenge instructions. ' +
     'Match results, scores and kickoff times from <b>FIFA official match records</b> (fifa.com), corroborated by NBC Sports, CBS Sports, ESPN and Sporting News, for the 2026 FIFA World Cup. Kickoff times anchored to ET, converted to CT/PT. Hover-card country pedigree (titles, best finish) from public FIFA World Cup historical records.' +
