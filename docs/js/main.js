@@ -86,19 +86,59 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
 }
 
-// Build a link that carries the currently-shown bracket and share/copy it.
-async function shareCurrent() {
+// Possessive display: "Eric" -> "Eric’s", "James" -> "James’", empty -> "your".
+function possessiveLabel(name) {
+  const n = String(name || "").trim();
+  if (!n) return "your";
+  return n + (/s$/i.test(n) ? "\u2019" : "\u2019s");
+}
+
+// Open the "Share as…" editor so the owner can choose how their name comes across.
+function openShareDialog() {
+  if (!CURRENT || !TOPO) return;
+  const dlg = $("#sharedlg"), input = $("#share-as"), native = $("#share-native");
+  if (!dlg || !input || typeof dlg.showModal !== "function") return doShareCopy(); // fallback if <dialog> unsupported
+  input.value = CURRENT.entrant || "";
+  updateSharePreview();
+  if (native) native.hidden = !navigator.share;
+  dlg.showModal();
+  setTimeout(() => { input.focus(); input.select(); }, 30);
+}
+
+function updateSharePreview() {
+  const input = $("#share-as"), prev = $("#share-preview");
+  if (prev) prev.textContent = possessiveLabel((input && input.value) || (CURRENT && CURRENT.entrant) || "");
+}
+
+function effectiveShareName() {
+  const input = $("#share-as");
+  const typed = input ? input.value.trim() : "";
+  return (typed || (CURRENT && CURRENT.entrant) || "").slice(0, 60);
+}
+
+function closeShareDialog() {
+  const dlg = $("#sharedlg");
+  if (dlg && dlg.open && typeof dlg.close === "function") dlg.close();
+}
+
+// Copy a link that carries the currently-shown bracket under the chosen name.
+async function doShareCopy() {
   if (!CURRENT || !TOPO) return;
   let url;
-  try { url = buildShareUrl(CURRENT, TOPO); }
+  try { url = buildShareUrl(CURRENT, TOPO, effectiveShareName()); }
   catch (e) { toast("Couldn\u2019t build a link for this bracket."); return; }
-  const who = CURRENT.entrant ? `${CURRENT.entrant}\u2019s` : "My";
-  if (navigator.share) {
-    try { await navigator.share({ title: `${who} World Cup 2026 bracket`, url }); return; }
-    catch (e) { if (e && e.name === "AbortError") return; /* else fall back to copy */ }
-  }
   try { await navigator.clipboard.writeText(url); toast("Share link copied \u2014 paste it to a friend"); }
   catch (e) { window.prompt("Copy this share link:", url); }
+  closeShareDialog();
+}
+
+async function doShareNative() {
+  if (!navigator.share || !CURRENT || !TOPO) return;
+  let url;
+  try { url = buildShareUrl(CURRENT, TOPO, effectiveShareName()); }
+  catch (e) { toast("Couldn\u2019t build a link for this bracket."); return; }
+  try { await navigator.share({ title: `${possessiveLabel(effectiveShareName())} World Cup 2026 bracket`, url }); closeShareDialog(); }
+  catch (e) { if (e && e.name === "AbortError") return; }
 }
 
 // Leave a shared-link view without erasing the visitor's own saved bracket.
@@ -140,7 +180,15 @@ function wire() {
   $("#vb-replace").onclick = () => (IS_SHARED ? leaveShared() : toLanding());
   $("#vb-clear").onclick = toLanding;
   $("#vb-export").onclick = () => { const p = CURRENT || loadPicks(); if (p) exportPicks(p); };
-  const shareBtn = $("#vb-share"); if (shareBtn) shareBtn.onclick = shareCurrent;
+  const shareBtn = $("#vb-share"); if (shareBtn) shareBtn.onclick = openShareDialog;
+  const sIn = $("#share-as");
+  if (sIn) {
+    sIn.oninput = updateSharePreview;
+    sIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doShareCopy(); } });
+  }
+  const sCopy = $("#share-copy"); if (sCopy) sCopy.onclick = doShareCopy;
+  const sNative = $("#share-native"); if (sNative) sNative.onclick = doShareNative;
+  const sCancel = $("#share-cancel"); if (sCancel) sCancel.onclick = closeShareDialog;
   const dab = $("#dab"); if (dab) dab.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
 }
 

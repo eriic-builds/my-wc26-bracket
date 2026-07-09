@@ -60,5 +60,13 @@ ok("buildShareUrl shape", url.startsWith("https://example.com/my-wc26-bracket/#e
 const back = readShareFromUrl(topo, "#" + url.split("#")[1]);
 ok("buildShareUrl round-trips via readShareFromUrl", back && back.picks.champ === demo.champ);
 
+// Custom display name overrides both the readable e= and the encoded entrant.
+const custom = buildShareUrl(demo, topo, "The Champ");
+const cr = readShareFromUrl(topo, "#" + custom.split("#")[1]);
+ok("custom name shows in link text (e=)", custom.includes("#e=The%20Champ&"));
+ok("custom name is read back", cr && cr.name === "The Champ");
+ok("custom name is baked into the bracket", cr && cr.picks.entrant === "The Champ");
+ok("custom name doesn't change picks", cr && cr.picks.champ === demo.champ);
+
 if (fails) { console.error(`\nFAILED: ${fails} check(s)`); process.exit(1); }
 console.log("\nshare.mjs: all checks passed");

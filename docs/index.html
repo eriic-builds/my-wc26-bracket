@@ -57,6 +57,21 @@
   padding:10px 16px;font-size:.9rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.35);
   opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;max-width:min(90vw,420px);text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#sharedlg{border:none;background:transparent;padding:0;max-width:min(92vw,420px)}
+#sharedlg::backdrop{background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+.sharedlg-card{background:var(--panel,#1c1b21);border:1px solid var(--border2);border-radius:16px;padding:18px 20px 20px;box-shadow:0 24px 70px rgba(0,0,0,.5);color:var(--text)}
+.sharedlg-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.sharedlg-head h3{font-size:1.15rem;font-weight:800;margin:0}
+.sharedlg-x{font:inherit;font-size:1rem;color:var(--text);background:var(--hover);border:1px solid var(--border2);border-radius:9px;width:32px;height:32px;cursor:pointer;flex:0 0 auto}
+.sharedlg-field{display:flex;flex-direction:column;gap:5px;font-size:.82rem;color:var(--muted,#9aa2ad);margin-top:14px}
+.sharedlg-field input{font:inherit;font-size:1rem;color:var(--text);background:var(--hover);border:1px solid var(--border2);border-radius:10px;padding:10px 12px}
+.sharedlg-field input:focus{outline:none;border-color:#0097F4}
+.sharedlg-preview{font-size:.86rem;color:var(--muted,#9aa2ad);margin:12px 0 0}
+.sharedlg-preview b{color:var(--text);font-weight:650}
+.sharedlg-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.sharedlg-btn{font:inherit;font-size:.9rem;font-weight:650;border-radius:10px;padding:8px 15px;cursor:pointer;color:var(--text);background:var(--hover);border:1px solid var(--border2)}
+.sharedlg-btn:hover{background:var(--border)}
+.sharedlg-btn.primary{color:#04121a;background:linear-gradient(120deg,#0097F4,#00B291);border-color:transparent}
 .steps{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:26px 0 0;text-align:left}
 .step{flex:1 1 200px;max-width:230px;background:var(--hover);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
 .step b{display:block;color:var(--gold-ink);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
@@ -216,6 +231,24 @@
 <button class="dab" id="dab" title="Back to top" aria-label="Back to top" hidden>↑</button>
 <div class="statcard" id="statcard" aria-hidden="true"></div>
 <div id="toast" role="status" aria-live="polite"></div>
+
+<!-- Share editor: choose how your name comes across, then copy/share the link -->
+<dialog id="sharedlg" aria-labelledby="sharedlg-h">
+  <div class="sharedlg-card">
+    <div class="sharedlg-head">
+      <h3 id="sharedlg-h">Share your bracket</h3>
+      <button type="button" class="sharedlg-x" id="share-cancel" title="Close" aria-label="Close">✕</button>
+    </div>
+    <label class="sharedlg-field"><span>Show my name as</span>
+      <input id="share-as" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Alex">
+    </label>
+    <p class="sharedlg-preview">Opens as “<b><span id="share-preview">your</span> bracket</b>”.</p>
+    <div class="sharedlg-actions">
+      <button type="button" class="sharedlg-btn" id="share-native" hidden>Share…</button>
+      <button type="button" class="sharedlg-btn primary" id="share-copy">Copy link</button>
+    </div>
+  </div>
+</dialog>
 
 <script src="js/vendor/xlsx.full.min.js"></script>
 <script type="module" src="js/main.js"></script>

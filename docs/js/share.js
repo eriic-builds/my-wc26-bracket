@@ -107,11 +107,14 @@ export function decodeBracket(str, topology) {
   }
 }
 
-// Build a shareable absolute URL for the given picks (browser only).
-export function buildShareUrl(picks, topology) {
+// Build a shareable absolute URL for the given picks (browser only). An optional
+// displayName overrides how the owner's name appears (both in the readable link and
+// inside the bracket), so people can choose how their name comes across.
+export function buildShareUrl(picks, topology, displayName) {
+  const nm = String(displayName != null ? displayName : (picks.entrant || "")).slice(0, 60);
+  const forEncode = nm === String(picks.entrant || "") ? picks : { ...picks, entrant: nm };
   const base = location.origin + location.pathname;
-  const nm = encodeURIComponent(String(picks.entrant || "").slice(0, 60));
-  return `${base}#e=${nm}&b=${encodeBracket(picks, topology)}`;
+  return `${base}#e=${encodeURIComponent(nm)}&b=${encodeBracket(forEncode, topology)}`;
 }
 
 // Read a shared bracket from the current URL fragment. Returns { picks, name } or null.
