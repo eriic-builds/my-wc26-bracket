@@ -157,10 +157,28 @@ function showLanding() {
   $("#viewerbar").hidden = true; $("#dab").hidden = true;
   $("#errbox").hidden = true;
   $("#landing").hidden = false;
+  syncLandingThemeButtons();
   window.scrollTo(0, 0);
 }
 
 function toLanding() { clearPicks(); showLanding(); }   // "New bracket" / "Clear" — forget the saved bracket
+
+// Landing theme switcher (light/dark). Persists to the same key the dashboard
+// uses (wcb.theme) so the choice carries straight into the dashboard, and reads
+// data-theme back so it stays in sync when you return to the landing.
+function setLandingTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("wcb.theme", t); } catch (e) {}
+  syncLandingThemeButtons();
+}
+function syncLandingThemeButtons() {
+  const t = document.documentElement.getAttribute("data-theme");
+  document.querySelectorAll("[data-theme-btn]").forEach(b => {
+    const on = b.getAttribute("data-theme-btn") === t;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
 
 function wire() {
   const fileInput = $("#file");
@@ -179,6 +197,12 @@ function wire() {
     try { accept(validateAgainstTopology(JSON.parse(await f.text()), TOPO)); }
     catch (e) { showError(e instanceof ValidationError ? e.problems : ["That JSON wasn\u2019t a valid bracket: " + (e.message || e)]); }
   };
+  // Landing nav: brand → back-to-top, and the light/dark theme switcher.
+  const lhome = $("#lhome");
+  if (lhome) lhome.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  document.querySelectorAll("[data-theme-btn]").forEach(b =>
+    b.addEventListener("click", () => setLandingTheme(b.getAttribute("data-theme-btn"))));
+  syncLandingThemeButtons();
   $("#vb-replace").onclick = () => (IS_SHARED ? leaveShared() : toLanding());
   $("#vb-clear").onclick = toLanding;
   $("#vb-export").onclick = () => { const p = CURRENT || loadPicks(); if (p) exportPicks(p); };
@@ -195,7 +219,7 @@ function wire() {
 }
 
 (async function () {
-  try { const th = localStorage.getItem("wcb.theme"); if (th) document.documentElement.setAttribute("data-theme", th); } catch (e) {}
+  try { const th = localStorage.getItem("wcb.theme") || "dark"; document.documentElement.setAttribute("data-theme", th); localStorage.setItem("wcb.theme", th); } catch (e) { document.documentElement.setAttribute("data-theme", "dark"); }
   wire();
   try { await loadData(); } catch (e) { console.warn("data load failed", e); }
   let shared = null;
