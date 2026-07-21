@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "auditedAt": "2026-07-10T09:05:53Z",
+  "source": {
+    "host": "https://wc26.bogachev.fr",
+    "identityManifest": "https://wc26.bogachev.fr/matches.json",
+    "scope": "identity metadata and frameability only; no visual source, analytics, video, thumbnails, momentum, or xG retained"
+  },
+  "summary": {
+    "mappedMatches": 25,
+    "uniqueManifestMatches": 25,
+    "pagesHttp200": 25,
+    "pageIdsMatched": 25,
+    "frameableToday": 25,
+    "teamAliasOccurrences": 4,
+    "codeTokenDifferences": 11,
+    "dateRollovers": 1,
+    "penaltyScoreCases": 4,
+    "result": "pass"
+  },
+  "discrepancies": {
+    "teamAliases": [
+      {"match": "M81", "remote": "USA", "local": "United States"},
+      {"match": "M81", "remote": "Bosnia and Herzegovina", "local": "Bosnia & Herz."},
+      {"match": "M86", "remote": "Cabo Verde", "local": "Cape Verde"},
+      {"match": "M94", "remote": "USA", "local": "United States"}
+    ],
+    "bracketVsPortraitCodes": [
+      {"team": "Austria", "bracketCode": "AUT", "portraitToken": "aus", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Bosnia & Herz.", "bracketCode": "BIH", "portraitToken": "ban", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Cape Verde", "bracketCode": "CPV", "portraitToken": "cve", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "DR Congo", "bracketCode": "COD", "portraitToken": "dco", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Ivory Coast", "bracketCode": "CIV", "portraitToken": "ico", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Japan", "bracketCode": "JPN", "portraitToken": "jap", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Morocco", "bracketCode": "MAR", "portraitToken": "mor", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Netherlands", "bracketCode": "NED", "portraitToken": "net", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "South Africa", "bracketCode": "RSA", "portraitToken": "saf", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Spain", "bracketCode": "ESP", "portraitToken": "spa", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"},
+      {"team": "Switzerland", "bracketCode": "SUI", "portraitToken": "swi", "handling": "explicit reviewed slug mapping; never derive URL from bracket code"}
+    ],
+    "dateRollovers": [
+      {
+        "match": "M83",
+        "remoteDate": "2026-07-03",
+        "fifaDate": "2026-07-02",
+        "fifaKickoff": "2026-07-02T23:00:00Z",
+        "handling": "canonical FIFA date retained after verified midnight-boundary identity match"
+      }
+    ],
+    "stageLabelNormalizations": [
+      {"match": "M97", "remote": "Quarter-final", "local": "Quarterfinal"}
+    ],
+    "penaltyScoreHandling": [
+      {"match": "M74", "portraitScore": [1, 1], "fifaScore": [1, 1], "fifaNote": "4–3 pens", "handling": "compare regulation/extra-time score; retain FIFA shootout note separately"},
+      {"match": "M75", "portraitScore": [1, 1], "fifaScore": [1, 1], "fifaNote": "3–2 pens", "handling": "compare regulation/extra-time score; retain FIFA shootout note separately"},
+      {"match": "M88", "portraitScore": [1, 1], "fifaScore": [1, 1], "fifaNote": "4–2 pens", "handling": "compare regulation/extra-time score; retain FIFA shootout note separately"},
+      {"match": "M96", "portraitScore": [0, 0], "fifaScore": [0, 0], "fifaNote": "4–3 pens", "handling": "compare regulation/extra-time score; retain FIFA shootout note separately"}
+    ]
+  },
+  "failClosedRules": [
+    "hardcoded host plus validated lowercase three-letter slug pair",
+    "mapping team pair, oriented score, canonical FIFA date, and stage must match local FIFA details",
+    "page identity IDs are audit evidence only and never enter the URL",
+    "missing, duplicate, mismatched, or invalid mappings expose no iframe action",
+    "direct link remains available because current frameability is not a permanent contract"
+  ],
+  "pages": [
+    ["M73", "saf-can", "1988523", 200, true, true],
+    ["M74", "ger-par", "1990970", 200, true, true],
+    ["M75", "net-mor", "1990731", 200, true, true],
+    ["M76", "bra-jap", "1990729", 200, true, true],
+    ["M77", "fra-swe", "1990969", 200, true, true],
+    ["M78", "ico-nor", "1990967", 200, true, true],
+    ["M79", "mex-ecu", "1992061", 200, true, true],
+    ["M80", "eng-dco", "1992064", 200, true, true],
+    ["M81", "usa-ban", "1990730", 200, true, true],
+    ["M82", "bel-sen", "1992065", 200, true, true],
+    ["M83", "por-cro", "1992063", 200, true, true],
+    ["M84", "spa-aus", "1992067", 200, true, true],
+    ["M85", "swi-alg", "1992066", 200, true, true],
+    ["M86", "arg-cve", "1990968", 200, true, true],
+    ["M87", "col-gha", "1992062", 200, true, true],
+    ["M88", "aus-egy", "1990971", 200, true, true],
+    ["M89", "par-fra", "1994739", 200, true, true],
+    ["M90", "can-mor", "1993367", 200, true, true],
+    ["M91", "bra-nor", "1993896", 200, true, true],
+    ["M92", "mex-eng", "1995347", 200, true, true],
+    ["M93", "por-spa", "1998192", 200, true, true],
+    ["M94", "usa-bel", "1995348", 200, true, true],
+    ["M95", "arg-egy", "1998571", 200, true, true],
+    ["M96", "swi-col", "1998572", 200, true, true],
+    ["M97", "fra-mor", "1998582", 200, true, true]
+  ],
+  "pageColumns": [
+    "match",
+    "slug",
+    "externalId",
+    "httpStatus",
+    "pageIdMatched",
+    "frameableToday"
+  ],
+  "headersSummary": {
+    "xFrameOptionsValues": [],
+    "contentSecurityPolicyValues": [],
+    "metaContentSecurityPolicyPages": 0,
+    "note": "No current page sent a frame-blocking header; this is revalidated at production permission time."
+  }
+}

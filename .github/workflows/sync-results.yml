@@ -34,18 +34,21 @@ jobs:
       - name: Fetch results into docs/data/results.json
         run: python scripts/fetch_results.py
 
-      - name: Commit and push if results changed
+      - name: Validate match details and portrait coverage
+        run: python scripts/validate_match_details.py
+
+      - name: Commit and push if data changed
         id: commit
         run: |
-          if [[ -n "$(git status --porcelain docs/data/results.json)" ]]; then
+          if [[ -n "$(git status --porcelain -- docs/data/results.json docs/data/match-details.json docs/data/match-portraits.json)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add docs/data/results.json
-            git commit -m "chore: auto-sync World Cup results"
+            git add docs/data/results.json docs/data/match-details.json docs/data/match-portraits.json
+            git commit -m "chore: auto-sync World Cup match data"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No changes — results already current."
+            echo "No changes — match data already current."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 

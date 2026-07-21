@@ -1,0 +1,1793 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Mirrored Bracket Map Rebuild Brief</title>
+  <style>
+    :root {
+      --bg: #08110e;
+      --panel: #101c18;
+      --panel-2: #14241e;
+      --text: #f4f7f5;
+      --muted: #9fb1a9;
+      --line: rgba(255, 255, 255, 0.1);
+      --line-strong: rgba(255, 255, 255, 0.18);
+      --gold: #e7bd66;
+      --gold-soft: rgba(231, 189, 102, 0.13);
+      --green: #53d39a;
+      --blue: #67a8ff;
+      --red: #ff7e78;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
+      --radius: 18px;
+      --content: 1120px;
+    }
+
+    html[data-theme="light"] {
+      --bg: #eef3f0;
+      --panel: #ffffff;
+      --panel-2: #f5f8f6;
+      --text: #13221c;
+      --muted: #5e7169;
+      --line: rgba(19, 34, 28, 0.1);
+      --line-strong: rgba(19, 34, 28, 0.18);
+      --gold-soft: rgba(166, 111, 19, 0.1);
+      --shadow: 0 24px 70px rgba(33, 57, 47, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 84% 6%, rgba(231, 189, 102, 0.09), transparent 30rem),
+        radial-gradient(circle at 4% 24%, rgba(83, 211, 154, 0.07), transparent 27rem),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      width: min(100%, 1480px);
+      margin: 0 auto;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      padding: 28px 22px;
+      border-right: 1px solid var(--line);
+      overflow: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 30px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 31px;
+      height: 31px;
+      place-items: center;
+      color: #182016;
+      background: var(--gold);
+      border-radius: 9px;
+      box-shadow: 0 8px 24px rgba(231, 189, 102, 0.2);
+    }
+
+    .nav-title {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .nav {
+      display: grid;
+      gap: 3px;
+    }
+
+    .nav a {
+      padding: 7px 10px;
+      color: var(--muted);
+      border-radius: 8px;
+      font-size: 0.83rem;
+      text-decoration: none;
+      transition: 150ms ease;
+    }
+
+    .nav a:hover,
+    .nav a[aria-current="true"] {
+      color: var(--text);
+      background: var(--panel-2);
+    }
+
+    .sidebar-note {
+      margin-top: 26px;
+      padding: 13px;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-size: 0.76rem;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 28px clamp(22px, 5vw, 76px) 90px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      width: min(100%, var(--content));
+      margin: 0 auto 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 14px;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 150ms ease, border-color 150ms ease;
+    }
+
+    .button:hover {
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      color: #191c14;
+      background: var(--gold);
+      border-color: var(--gold);
+      font-weight: 800;
+    }
+
+    .hero,
+    .content {
+      width: min(100%, var(--content));
+      margin-inline: auto;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 510px;
+      padding: clamp(30px, 6vw, 76px);
+      overflow: hidden;
+      background:
+        linear-gradient(140deg, rgba(16, 28, 24, 0.98), rgba(16, 28, 24, 0.76)),
+        var(--panel);
+      border: 1px solid var(--line-strong);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    html[data-theme="light"] .hero {
+      background:
+        linear-gradient(140deg, rgba(255, 255, 255, 0.98), rgba(245, 248, 246, 0.82)),
+        var(--panel);
+    }
+
+    .hero::before {
+      position: absolute;
+      top: -180px;
+      right: -100px;
+      width: 430px;
+      height: 430px;
+      background: radial-gradient(circle, rgba(231, 189, 102, 0.19), transparent 68%);
+      content: "";
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 18px;
+      color: var(--green);
+      font-size: 0.75rem;
+      font-weight: 850;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 7px;
+      height: 7px;
+      background: currentColor;
+      border-radius: 50%;
+      content: "";
+      box-shadow: 0 0 0 5px rgba(83, 211, 154, 0.1);
+    }
+
+    h1,
+    h2,
+    h3 {
+      line-height: 1.12;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(2.7rem, 7vw, 6.2rem);
+      letter-spacing: -0.065em;
+    }
+
+    h1 span {
+      color: var(--gold);
+    }
+
+    .lede {
+      max-width: 720px;
+      margin: 26px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.22rem);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 34px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 33px;
+      padding: 0 11px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 750;
+    }
+
+    .pill.gold {
+      color: var(--gold);
+      background: var(--gold-soft);
+      border-color: rgba(231, 189, 102, 0.28);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 36px;
+    }
+
+    .stat {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .stat strong {
+      display: block;
+      color: var(--gold);
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+      padding-top: 32px;
+    }
+
+    section {
+      scroll-margin-top: 24px;
+      padding: clamp(25px, 5vw, 48px);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .section-kicker {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--gold);
+      font-size: 0.7rem;
+      font-weight: 850;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      max-width: 780px;
+      margin: 0 0 20px;
+      font-size: clamp(1.65rem, 4vw, 2.55rem);
+      letter-spacing: -0.035em;
+    }
+
+    h3 {
+      margin: 28px 0 10px;
+      font-size: 1.08rem;
+    }
+
+    p {
+      max-width: 790px;
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    ul,
+    ol {
+      max-width: 830px;
+      margin: 12px 0 0;
+      padding-left: 1.35rem;
+      color: var(--muted);
+    }
+
+    li + li {
+      margin-top: 7px;
+    }
+
+    strong {
+      color: var(--text);
+    }
+
+    code {
+      padding: 0.14em 0.38em;
+      color: var(--gold);
+      background: var(--gold-soft);
+      border-radius: 5px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.9em;
+    }
+
+    .callout {
+      padding: 20px;
+      background: var(--panel-2);
+      border: 1px solid var(--line-strong);
+      border-left: 4px solid var(--gold);
+      border-radius: 12px;
+    }
+
+    .callout p {
+      color: var(--text);
+    }
+
+    .callout p + p {
+      color: var(--muted);
+    }
+
+    .scope-grid,
+    .two-col,
+    .three-col {
+      display: grid;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .scope-grid,
+    .two-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .three-col {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .mini-card {
+      padding: 21px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .mini-card h3 {
+      margin: 0 0 8px;
+    }
+
+    .mini-card p,
+    .mini-card ul {
+      margin-bottom: 0;
+      font-size: 0.9rem;
+    }
+
+    .mini-card.now {
+      border-top: 3px solid var(--green);
+    }
+
+    .mini-card.later {
+      border-top: 3px solid var(--blue);
+    }
+
+    .architecture {
+      margin: 30px 0 10px;
+      padding: 22px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, transparent, rgba(231, 189, 102, 0.04), transparent),
+        var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+    }
+
+    .columns {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 0.88fr 0.78fr 1.35fr 0.78fr 0.88fr 1fr 1.15fr;
+      gap: 7px;
+      width: 100%;
+      min-width: 0;
+      align-items: center;
+    }
+
+    .column {
+      display: grid;
+      min-height: 118px;
+      place-items: center;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .column.center {
+      min-height: 178px;
+      color: #1a1b14;
+      background: linear-gradient(155deg, #f5d995, #c99031);
+      border-color: var(--gold);
+      box-shadow: 0 0 42px rgba(231, 189, 102, 0.16);
+    }
+
+    .arrow-line {
+      width: 100%;
+      min-width: 0;
+      margin-top: 10px;
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.74rem;
+      letter-spacing: 0.07em;
+      text-align: center;
+    }
+
+    .rough-wrap {
+      margin-top: 24px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 48%, var(--gold-soft), transparent 22%),
+        var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .rough-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 15px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .rough-top strong {
+      font-size: 0.8rem;
+    }
+
+    .rough-tag {
+      color: var(--muted);
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .rough-stage {
+      overflow: hidden;
+      padding: 15px;
+    }
+
+    .rough-stage svg {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      height: auto;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .rough-edge {
+      fill: none;
+      stroke: var(--line-strong);
+      stroke-width: 1.4;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .rough-edge.final-edge {
+      stroke: var(--gold);
+      stroke-width: 2;
+    }
+
+    .rough-card {
+      fill: var(--panel);
+      stroke: var(--line-strong);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .rough-card.final-card {
+      stroke: var(--gold);
+      stroke-width: 2;
+    }
+
+    .rough-card-head {
+      fill: var(--panel-2);
+    }
+
+    .rough-card-line {
+      stroke: var(--line);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .rough-code {
+      fill: var(--text);
+      font-size: 7px;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+      text-anchor: middle;
+    }
+
+    .rough-team-line {
+      stroke: var(--muted);
+      stroke-linecap: round;
+      stroke-width: 2;
+      opacity: 0.55;
+    }
+
+    .rough-team-dot {
+      fill: var(--blue);
+      opacity: 0.78;
+    }
+
+    .rough-round {
+      fill: var(--muted);
+      font-size: 7px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-anchor: middle;
+    }
+
+    .rough-center-label {
+      fill: var(--gold);
+      font-size: 7px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-anchor: middle;
+    }
+
+    .rough-caption {
+      padding: 0 15px 14px;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .branch-table,
+    .file-table {
+      width: 100%;
+      margin-top: 18px;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--text);
+      background: var(--panel-2);
+      font-size: 0.73rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    td {
+      color: var(--muted);
+    }
+
+    .match-demo {
+      display: grid;
+      grid-template-columns: minmax(240px, 340px) 1fr;
+      gap: 28px;
+      align-items: center;
+      margin-top: 28px;
+      padding: clamp(20px, 4vw, 35px);
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+    }
+
+    .match-card {
+      overflow: hidden;
+      background: var(--panel);
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+    }
+
+    .match-head {
+      display: flex;
+      justify-content: space-between;
+      padding: 9px 12px;
+      color: var(--muted);
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--line);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .team-row {
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 49px;
+      padding: 8px 12px;
+    }
+
+    .team-row + .team-row {
+      border-top: 1px solid var(--line);
+    }
+
+    .team-row.loser {
+      color: var(--muted);
+      opacity: 0.65;
+    }
+
+    .flag {
+      display: grid;
+      width: 28px;
+      height: 20px;
+      place-items: center;
+      background: var(--panel-2);
+      border: 1px solid var(--line-strong);
+      border-radius: 3px;
+      font-size: 0.56rem;
+      font-weight: 900;
+    }
+
+    .score {
+      min-width: 24px;
+      color: var(--text);
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .anatomy-list {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .anatomy-list li {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 9px;
+      margin: 0;
+    }
+
+    .anatomy-list b {
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      color: #191c14;
+      background: var(--gold);
+      border-radius: 50%;
+      font-size: 0.68rem;
+    }
+
+    .cup-wrap {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 35px;
+      align-items: center;
+      margin-top: 24px;
+    }
+
+    .cup {
+      display: grid;
+      min-height: 240px;
+      place-items: center;
+      background:
+        radial-gradient(circle, rgba(231, 189, 102, 0.16), transparent 65%),
+        var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+    }
+
+    .cup svg {
+      width: 130px;
+      filter: drop-shadow(0 18px 22px rgba(231, 189, 102, 0.16));
+    }
+
+    .passes {
+      display: grid;
+      gap: 0;
+      margin-top: 22px;
+      counter-reset: pass;
+    }
+
+    .pass {
+      position: relative;
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line);
+      counter-increment: pass;
+    }
+
+    .pass::before {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: #191c14;
+      background: var(--gold);
+      border-radius: 12px;
+      content: counter(pass);
+      font-weight: 900;
+    }
+
+    .pass h3 {
+      margin: 1px 0 5px;
+    }
+
+    .pass p {
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 18px;
+      padding: 0;
+      list-style: none;
+      counter-reset: acceptance;
+    }
+
+    .checklist li {
+      display: grid;
+      grid-template-columns: 27px 1fr;
+      gap: 10px;
+      margin: 0;
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      counter-increment: acceptance;
+    }
+
+    .checklist li::before {
+      display: grid;
+      width: 25px;
+      height: 25px;
+      place-items: center;
+      color: var(--gold);
+      border: 1px solid rgba(231, 189, 102, 0.38);
+      border-radius: 7px;
+      content: counter(acceptance);
+      font-size: 0.67rem;
+      font-weight: 900;
+    }
+
+    .council {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+      margin-top: 22px;
+    }
+
+    .voice {
+      padding: 15px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 11px;
+    }
+
+    .voice b {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--gold);
+      font-size: 0.78rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .voice span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .approval {
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 0, rgba(231, 189, 102, 0.13), transparent 55%),
+        var(--panel);
+      border-color: rgba(231, 189, 102, 0.25);
+    }
+
+    .approval h2,
+    .approval p {
+      margin-inline: auto;
+    }
+
+    .approval-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 10;
+      max-width: min(360px, calc(100vw - 36px));
+      padding: 13px 16px;
+      color: #101713;
+      background: var(--green);
+      border-radius: 11px;
+      box-shadow: var(--shadow);
+      font-size: 0.84rem;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        display: block;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        padding-top: 18px;
+      }
+
+      .scope-grid,
+      .two-col,
+      .three-col,
+      .checklist,
+      .council {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .toolbar {
+        justify-content: space-between;
+      }
+
+      .hero {
+        min-height: 0;
+        border-radius: 20px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .match-demo,
+      .cup-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .cup-wrap {
+        gap: 18px;
+      }
+
+      section {
+        border-radius: 15px;
+      }
+    }
+
+    @media print {
+      :root {
+        --bg: #ffffff;
+        --panel: #ffffff;
+        --panel-2: #f4f4f4;
+        --text: #111111;
+        --muted: #444444;
+        --line: #dddddd;
+        --line-strong: #bbbbbb;
+      }
+
+      body {
+        background: #ffffff;
+      }
+
+      .shell {
+        display: block;
+      }
+
+      .sidebar,
+      .toolbar,
+      .approval-actions,
+      .toast {
+        display: none;
+      }
+
+      .main {
+        padding: 0;
+      }
+
+      .hero,
+      section {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Brief navigation">
+      <div class="brand">
+        <span class="brand-mark">26</span>
+        <span>Build brief</span>
+      </div>
+      <p class="nav-title">Review sections</p>
+      <nav class="nav">
+        <a href="#decision">Decision</a>
+        <a href="#goal">Goal and scope</a>
+        <a href="#structure">Tournament structure</a>
+        <a href="#rough-preview">Rough map preview</a>
+        <a href="#cards">Match cards</a>
+        <a href="#connectors">Connectors and legend</a>
+        <a href="#views">Views and legend</a>
+        <a href="#trophy">3D center sculpture</a>
+        <a href="#responsive">Responsive and access</a>
+        <a href="#technical">Technical strategy</a>
+        <a href="#fable">Fable handoff</a>
+        <a href="#sequence">Build sequence</a>
+        <a href="#acceptance">Acceptance criteria</a>
+        <a href="#council">Taste Council</a>
+        <a href="#approval">Approval gate</a>
+      </nav>
+      <div class="sidebar-note">
+        Fable handoff inside the sandbox's published docs tree. It becomes public only after commit and deployment. No feature source code has changed.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <button class="button" id="themeButton" type="button">Light theme</button>
+        <button class="button" type="button" onclick="window.print()">Print</button>
+      </div>
+
+      <header class="hero">
+        <p class="eyebrow">Ready for review</p>
+        <h1>Mirrored bracket map <span>rebuild</span></h1>
+        <p class="lede">
+          Rebuild the knockout map as one complete tournament story. Two mirrored branches flow into a center Final, with every game presented as one clear two-country card.
+        </p>
+        <div class="meta">
+          <span class="pill gold">First milestone</span>
+          <span class="pill">Target: my-wc26-bracket</span>
+          <span class="pill">No-build vanilla</span>
+          <span class="pill">Fable handoff</span>
+          <span class="pill">Production untouched</span>
+        </div>
+        <div class="stats" aria-label="Map summary">
+          <div class="stat"><strong>31</strong><span>match cards</span></div>
+          <div class="stat"><strong>30</strong><span>feeder edges</span></div>
+          <div class="stat"><strong>9</strong><span>desktop columns</span></div>
+          <div class="stat"><strong>1</strong><span>center Final</span></div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="decision">
+          <span class="section-kicker">Decision requested</span>
+          <h2>Approve the map contract before implementation</h2>
+          <div class="callout">
+            <p><strong>Approval means:</strong> build the full mirrored bracket in the feature sandbox, including cards, feeder lines, responsive layouts, the existing legend, and a distinct World Cup-inspired 3D centerpiece.</p>
+            <p>It does not approve FIFA detail work, match hover analytics, FotMob access, Bogachev embedding, production changes, commits, pushes, or deployment.</p>
+          </div>
+        </section>
+
+        <section id="views">
+          <span class="section-kicker">View parity contract</span>
+          <h2>Actual path and My picks keep different stories on one geometry</h2>
+          <p>
+            The rebuild preserves more than the toggle. Both views use the same 31 match codes, slots, cards, Final, and 30 feeder relationships. Their occupants and status data remain separate.
+          </p>
+          <div class="three-col">
+            <article class="mini-card">
+              <h3>Actual path</h3>
+              <ul>
+                <li>Shows the realized tournament route</li>
+                <li>Resolves later slots from actual results</li>
+                <li>Keeps the blue ▲ replacement meaning</li>
+                <li>Keeps actual-path connector treatment</li>
+                <li>Never rewrites the user's saved picks</li>
+              </ul>
+            </article>
+            <article class="mini-card">
+              <h3>My picks</h3>
+              <ul>
+                <li>Preserves the original bracket chain</li>
+                <li>Keeps ✓, ✕, and pending states</li>
+                <li>Keeps advancing chevrons</li>
+                <li>Keeps the champion-pick state</li>
+                <li>Never presents a replacement as the user's pick</li>
+              </ul>
+            </article>
+            <article class="mini-card">
+              <h3>Shared contract</h3>
+              <ul>
+                <li>Same match codes and mirrored slots</li>
+                <li>Same card component and center Final</li>
+                <li>Separate occupants and status classes</li>
+                <li>One visible tree at a time</li>
+                <li>Fresh connector draw after every switch</li>
+              </ul>
+            </article>
+          </div>
+          <h3>How to read this bracket stays visible</h3>
+          <div class="council">
+            <div class="voice"><b>✓ Won or through</b><span>Your selected team advanced.</span></div>
+            <div class="voice"><b>✕ Pick is out</b><span>Your selected team was eliminated.</span></div>
+            <div class="voice"><b>Correct path line</b><span>Your route remains right so far.</span></div>
+            <div class="voice"><b>Pending path line</b><span>Your selected route is still to play.</span></div>
+            <div class="voice"><b>▲ Actual replacement</b><span>The realized advancer replaced your pick.</span></div>
+            <div class="voice"><b>Actual path line</b><span>The route the tournament took.</span></div>
+            <div class="voice"><b>› Advancing pick</b><span>You have this team moving forward.</span></div>
+            <div class="voice"><b>Champion pick</b><span>Your selected tournament winner.</span></div>
+          </div>
+          <div class="callout" style="margin-top: 24px">
+            <p><strong>Hard rule:</strong> no occupant, status class, or connector from one view survives into the other after a toggle. The geometry stays fixed while the story changes.</p>
+          </div>
+        </section>
+
+        <section id="goal">
+          <span class="section-kicker">Goal and context</span>
+          <h2>Make the full tournament understandable at one glance</h2>
+          <p>
+            The current bracket displays rounds from left to right. Each country has its own border, so a game does not read as one visual object. Connector logic follows repeated team names between columns.
+          </p>
+          <p>
+            The rebuild changes the visual grammar. The game becomes the primary object. The shape becomes symmetrical. The Final becomes the focal point. Existing scoring and pick meaning stay intact.
+          </p>
+          <div class="scope-grid">
+            <article class="mini-card now">
+              <h3>Build now</h3>
+              <ul>
+                <li>Mirrored left and right tournament branches</li>
+                <li>One outlined two-country card per game</li>
+                <li>All feeder lines into M104</li>
+                <li>Actual path and My picks</li>
+                <li>Current legend, adapted where needed</li>
+                <li>Distinct World Cup-inspired 3D sculpture</li>
+                <li>Desktop, tablet, and phone layouts</li>
+              </ul>
+            </article>
+            <article class="mini-card later">
+              <h3>Build after map approval</h3>
+              <ul>
+                <li>Official FIFA match facts</li>
+                <li>Hover, focus, and tap details</li>
+                <li>Bogachev portrait mappings</li>
+                <li>Click-to-load external portrait dialog</li>
+                <li>Any production port to sled-mywcbracket</li>
+              </ul>
+            </article>
+          </div>
+          <h3>Platform boundaries</h3>
+          <ul>
+            <li>Static GitHub Pages</li>
+            <li>No build step or framework</li>
+            <li>Vanilla HTML, CSS, and ES modules</li>
+            <li>Self-hosted assets</li>
+            <li>Client-side rendering</li>
+          </ul>
+        </section>
+
+        <section id="fable">
+          <span class="section-kicker">Planning handoff</span>
+          <h2>Use this folder as Fable's source contract</h2>
+          <p>
+            The Markdown brief is the source of truth. This HTML file is the visual companion. Fable should review the live architecture and write six ranked, executor-ready plans for the first map milestone without implementing feature code.
+          </p>
+          <div class="callout" style="margin-bottom: 20px">
+            <p><strong>Planning output:</strong> <code>PLAN-bracket-tree-model.md</code>, <code>PLAN-mirrored-match-cards.md</code>, <code>PLAN-responsive-no-scroll.md</code>, <code>PLAN-feeder-connectors.md</code>, <code>PLAN-center-sculpture.md</code>, and <code>PLAN-map-validation-review.md</code>. Start with the tree model.</p>
+            <p><strong>Repository paths:</strong> write plans only in <code>/Users/ericlam/Projects/my-wc26-bracket</code>. Inspect <code>/Users/ericlam/Projects/sled-mywcbracket</code> as a read-only production reference and record future port deltas without copying or synchronizing files.</p>
+          </div>
+          <div class="scope-grid">
+            <article class="mini-card now">
+              <h3>Include in the task set</h3>
+              <ul>
+                <li>Sandbox protection and baseline checks</li>
+                <li>31-node and 30-edge tree model</li>
+                <li>Shared match cards and mirrored layout</li>
+                <li>Actual path, My picks, and legend parity</li>
+                <li>Feeder connectors for each visible view</li>
+                <li>Interactive dashboard-styled centerpiece</li>
+                <li>Responsive, accessibility, tests, and local screenshots</li>
+              </ul>
+            </article>
+            <article class="mini-card later">
+              <h3>Exclude from the task set</h3>
+              <ul>
+                <li>FIFA match-detail generation</li>
+                <li>Match hover facts</li>
+                <li>Bogachev portrait integration</li>
+                <li>Production porting or repository sync</li>
+                <li>Match odds, bookmaker links, or odds sync</li>
+                <li>Commits, pushes, and deployment</li>
+                <li>Reuse of this schematic as production code</li>
+              </ul>
+            </article>
+          </div>
+          <p style="margin-top: 20px"><strong>Stop condition:</strong> serve the rebuilt map locally, capture the required views, and wait for visual approval.</p>
+          <p style="margin-top: 12px"><strong>Next contract:</strong> after approval, continue with <a href="MATCH-DATA-CARD-AND-PORTRAIT-BRIEF.html">Match Data Card and Portrait Brief</a>.</p>
+        </section>
+
+        <section id="structure">
+          <span class="section-kicker">Tournament model</span>
+          <h2>A pure 31-node tree derived from topology</h2>
+          <p>
+            The Final is M104. Its two semifinal feeders define the mirrored halves. Browser interaction code will not hardcode match positions. A pure helper will derive side, round, slot, parent, and feeder relationships from <code>topology.ko_feed</code>.
+          </p>
+          <div class="architecture" aria-label="Nine-column mirrored bracket">
+            <div class="columns">
+              <div class="column">Left<br>R32</div>
+              <div class="column">Left<br>R16</div>
+              <div class="column">Left<br>QF</div>
+              <div class="column">Left<br>SF</div>
+              <div class="column center">Gold cup<br>M104 Final<br>Champion</div>
+              <div class="column">Right<br>SF</div>
+              <div class="column">Right<br>QF</div>
+              <div class="column">Right<br>R16</div>
+              <div class="column">Right<br>R32</div>
+            </div>
+            <div class="arrow-line">OUTER GAMES &gt;&gt;&gt;&gt; FLOW INWARD &gt;&gt; FINAL &lt;&lt; FLOW INWARD &lt;&lt;&lt;&lt; OUTER GAMES</div>
+          </div>
+          <div class="two-col">
+            <div>
+              <h3>Left branch</h3>
+              <table class="branch-table">
+                <thead><tr><th>Round</th><th>Matches</th></tr></thead>
+                <tbody>
+                  <tr><td>Semifinal</td><td>M101</td></tr>
+                  <tr><td>Quarterfinals</td><td>M97, M98</td></tr>
+                  <tr><td>Round of 16</td><td>M89, M90, M93, M94</td></tr>
+                  <tr><td>Round of 32</td><td>M74, M77, M73, M75, M83, M84, M81, M82</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <h3>Right branch</h3>
+              <table class="branch-table">
+                <thead><tr><th>Round</th><th>Matches</th></tr></thead>
+                <tbody>
+                  <tr><td>Semifinal</td><td>M102</td></tr>
+                  <tr><td>Quarterfinals</td><td>M99, M100</td></tr>
+                  <tr><td>Round of 16</td><td>M91, M92, M95, M96</td></tr>
+                  <tr><td>Round of 32</td><td>M76, M78, M79, M80, M86, M88, M85, M87</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p>
+            These lists are test expectations, not hardcoded browser layout data. The model must return 31 unique nodes, 30 feeder edges, one center Final, and no orphaned matches.
+          </p>
+        </section>
+
+        <section id="rough-preview">
+          <span class="section-kicker">Planning schematic</span>
+          <h2>A lightweight first look at the mirrored map</h2>
+          <p>
+            This rough view checks hierarchy and balance before production work starts. It contains all 31 match cards and all 30 feeder lines. Card sizes, spacing, colors, and the center sculpture remain subject to browser review.
+          </p>
+          <div class="rough-wrap">
+            <div class="rough-top">
+              <strong>Mirrored knockout map</strong>
+              <span class="rough-tag">Shape study, not final UI</span>
+            </div>
+            <div class="rough-stage">
+              <svg id="roughBracket" viewBox="0 0 1200 590" role="img" aria-labelledby="roughTitle roughDesc">
+                <title id="roughTitle">Rough mirrored World Cup bracket</title>
+                <desc id="roughDesc">Thirty-one compact match cards in nine columns. The left and right knockout branches converge on match 104 at the center.</desc>
+              </svg>
+            </div>
+            <div class="rough-caption">
+              The full shape always fits this panel. On small screens it becomes an orientation overview. This artifact uses placeholders only and will not become the production renderer.
+            </div>
+          </div>
+        </section>
+
+        <section id="cards">
+          <span class="section-kicker">Card contract</span>
+          <h2>Each game becomes one visible object</h2>
+          <p>
+            One outer card holds the match header and both team rows. The same card component renders Actual path and My picks with different occupants and states.
+          </p>
+          <div class="match-demo">
+            <div class="match-card" aria-label="Example completed match card, France 2, Morocco 0">
+              <div class="match-head"><span>M97</span><span>Quarterfinal</span></div>
+              <div class="team-row">
+                <span class="flag">FRA</span>
+                <strong>France</strong>
+                <span class="score">2</span>
+              </div>
+              <div class="team-row loser">
+                <span class="flag">MAR</span>
+                <span>Morocco</span>
+                <span class="score">0</span>
+              </div>
+            </div>
+            <ol class="anatomy-list">
+              <li><b>1</b><span><strong>Header:</strong> match code, round or date, and completed or upcoming state.</span></li>
+              <li><b>2</b><span><strong>Team rows:</strong> bundled flag, country name, score, or a clear Winner MXX placeholder.</span></li>
+              <li><b>3</b><span><strong>Status:</strong> winner, loser, correct pick, missed pick, actual replacement, pending, and champion treatment.</span></li>
+              <li><b>4</b><span><strong>Access:</strong> useful label, visible focus, readable names, and no color-only meaning.</span></li>
+            </ol>
+          </div>
+          <h3>Required states</h3>
+          <div class="three-col">
+            <div class="mini-card"><strong>Completed</strong><p>Final score, decisive winner, subdued loser, and any existing pick symbol.</p></div>
+            <div class="mini-card"><strong>Upcoming</strong><p>Known teams or feeder placeholders, kickoff date, and a neutral pending state.</p></div>
+            <div class="mini-card"><strong>Shootout</strong><p>Match score and penalty outcome remain unambiguous without crowding the card.</p></div>
+          </div>
+        </section>
+
+        <section id="connectors">
+          <span class="section-kicker">Flow and meaning</span>
+          <h2>Connect games by feeder relationships</h2>
+          <p>
+            The current connector code searches for the same team in adjacent rounds. The rebuild connects child matches to parent matches using explicit topology edges.
+          </p>
+          <ul>
+            <li>Each feeder draws one elbow line into its parent.</li>
+            <li>Left-side lines travel right toward the Final.</li>
+            <li>Right-side lines travel left toward the Final.</li>
+            <li>M101 and M102 meet at M104.</li>
+            <li>The SVG stays behind cards and ignores pointer input.</li>
+            <li>Lines redraw after resize, font loading, theme changes, section changes, and bracket view changes.</li>
+          </ul>
+          <h3>Legend stays in place</h3>
+          <p>
+            Keep the existing <strong>How to read this bracket</strong> block. It must still explain a won pick, eliminated pick, correct path line, pending line, actual replacement, actual path line, advancing team, and champion pick. Update wording only where match-level lines require clearer language.
+          </p>
+        </section>
+
+        <section id="trophy">
+          <span class="section-kicker">Center stage</span>
+          <h2>A World Cup-inspired sculpture supports the Final</h2>
+          <div class="cup-wrap">
+            <div class="cup" aria-hidden="true">
+              <svg viewBox="0 0 160 220" role="img">
+                <defs>
+                  <linearGradient id="gold" x1="0" x2="1">
+                    <stop offset="0" stop-color="#9d671b"/>
+                    <stop offset="0.5" stop-color="#f5db91"/>
+                    <stop offset="1" stop-color="#b87d26"/>
+                  </linearGradient>
+                </defs>
+                <polygon points="80,16 103,25 114,48 104,71 80,81 56,71 46,48 57,25" fill="url(#gold)"/>
+                <path d="M80 16v65M46 48h68M57 25l47 46M103 25 56 71" fill="none" stroke="#8e5c18" stroke-width="2" opacity=".58"/>
+                <path d="M50 78h17l18 63-15 17-16-47Z" fill="#d8a842"/>
+                <path d="M110 78H93l-18 63 15 17 16-47Z" fill="url(#gold)"/>
+                <path d="M70 123h20l7 28-17 14-17-14Z" fill="#b9822e"/>
+                <path d="M51 151h58l12 19-12 17H51l-12-17Z" fill="#1c1b21" stroke="#e0aa35" stroke-width="4"/>
+                <path d="M51 187h58l9 16H42Z" fill="url(#gold)"/>
+                <path d="M51 170h58" stroke="#0097f4" stroke-width="2" opacity=".8"/>
+              </svg>
+            </div>
+            <div>
+              <p>
+                The model will use familiar high-level cues, but its styling comes from the dashboard: faceted geometry, matte token colors, compact proportions, and controlled lighting.
+              </p>
+              <ul>
+                <li>Faceted globe, two clean V supports, short bridge, and compact hexagonal plinth</li>
+                <li>Dashboard <code>--gold</code>, <code>--panel</code>, blue, and teal tokens</li>
+                <li>Flat-shaded matte surfaces with no chrome or image textures</li>
+                <li>Orthographic framing and restrained key plus rim lighting</li>
+                <li>No flowing ribbons, organic figures, official twisting stem, inscriptions, logos, or FIFA branding</li>
+                <li>No downloaded, traced, scanned, reconstructed, or official mesh</li>
+                <li>Pinned self-hosted Three.js ES module</li>
+                <li>One full vertical-axis rotation every 36 seconds</li>
+                <li>Subtle three-degree cursor-follow tilt</li>
+                <li>Click-drag rotation with grab and grabbing cursors</li>
+                <li>Touch yaw that preserves vertical page scrolling</li>
+                <li>Arrow key rotation, Home reset, and Space pause or resume</li>
+                <li>No inertia, bobbing, tilt loop, particles, bloom, or wheel zoom</li>
+                <li>Lazy initialization when the bracket enters view</li>
+                <li>Pause offscreen and while the tab is hidden</li>
+                <li>Reduced motion disables automatic and cursor-follow movement</li>
+                <li>Local SVG fallback for WebGL failure and phones</li>
+                <li>Pointer capture only while actively dragging</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout" style="margin-top: 24px">
+            <p><strong>Design rule:</strong> make it look like a native dashboard illustration, not a separate art installation. Review it beside the Final card. Scale down or simplify anything that becomes louder than the tournament information.</p>
+            <p><strong>Motion:</strong> one very slow 360-degree turn, subtle hover tilt, and direct drag. Auto-rotation resumes after release. No inertia or extra effects.</p>
+            <p>This design boundary reduces copying risk but does not provide legal clearance. Rights-holder permission or qualified legal review remains the path to certainty when public use requires it.</p>
+            <p><strong>Confirmed choice:</strong> keep this distinct inspired design rather than reproduce the official trophy. The project's noncommercial status does not change the build boundary.</p>
+          </div>
+        </section>
+
+        <section id="responsive">
+          <span class="section-kicker">Responsive and accessible</span>
+          <h2>Preserve every game at every review width</h2>
+          <div class="three-col">
+            <article class="mini-card">
+              <h3>Wide desktop</h3>
+              <p>Show full flags, names, scores, code, and date across the complete mirrored composition. Keep the Final centered.</p>
+            </article>
+            <article class="mini-card">
+              <h3>Medium and tablet</h3>
+              <p>Fit all nine columns through fluid tracks and denser cards. Tablet cards use flags, team codes, scores, and status marks.</p>
+            </article>
+            <article class="mini-card">
+              <h3>Phone</h3>
+              <p>Show the whole tree as a miniature overview, then all 31 readable cards in a vertical round-by-round flow.</p>
+            </article>
+          </div>
+          <div class="callout" style="margin-top: 24px">
+            <p><strong>No side scrolling:</strong> no bracket view uses horizontal overflow, hidden scrollbars, drag-to-pan, or a global scale transform. Actual path and My picks update every responsive representation together.</p>
+          </div>
+          <h3>Accessibility contract</h3>
+          <ul>
+            <li>Actual path and My picks remain proper buttons.</li>
+            <li>Every match card receives a useful accessible label.</li>
+            <li>Names and scores remain readable without flags.</li>
+            <li>Status never relies on color alone.</li>
+            <li>Decorative lines stay hidden from assistive technology.</li>
+            <li>The interactive trophy has a concise label, keyboard instructions, and a Pause or Resume control.</li>
+            <li>Reduced motion stops auto-rotation and cursor-follow tilt.</li>
+            <li>Keyboard focus stays visible.</li>
+            <li>Pointer control never overlaps match cards or captures the wheel.</li>
+            <li>The phone layout does not require precision dragging or horizontal panning.</li>
+            <li>Three-letter visual team codes retain full names in accessible labels.</li>
+          </ul>
+        </section>
+
+        <section id="technical">
+          <span class="section-kicker">No-build technical strategy</span>
+          <h2>Keep the model pure and the browser code readable</h2>
+          <h3>Pure tree model</h3>
+          <p>
+            Add <code>deriveBracketTree(topology)</code>. It returns nodes with code, round, side, slot, parent, and feeders, plus explicit edges with source, destination, and feeder side.
+          </p>
+          <h3>Renderer</h3>
+          <p>
+            Refactor <code>buildBracket()</code> around the tree helper, one reusable <code>renderMatchCard()</code>, and a focused <code>renderCenterStage()</code>. Keep current score logic and safe text handling.
+          </p>
+          <h3>Interaction</h3>
+          <p>
+            Update connector drawing to use <code>data-match-code</code> and feeder edges. Do not add match-fact hover behavior in this milestone.
+          </p>
+          <h3>New files</h3>
+          <table class="file-table">
+            <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>docs/js/bracket-tree.js</code></td><td>Pure topology and layout model</td></tr>
+              <tr><td><code>docs/js/trophy.js</code></td><td>Lazy 3D cup lifecycle</td></tr>
+              <tr><td><code>docs/js/vendor/three.module.min.js</code></td><td>Pinned self-hosted Three.js runtime</td></tr>
+              <tr><td><code>docs/assets/trophy-fallback.svg</code></td><td>Static cup fallback</td></tr>
+              <tr><td><code>tests/bracket-tree.mjs</code></td><td>Node, branch, order, and edge tests</td></tr>
+              <tr><td><code>tests/matchcards.mjs</code></td><td>Card coverage and state tests</td></tr>
+            </tbody>
+          </table>
+          <h3>Existing files</h3>
+          <table class="file-table">
+            <thead><tr><th>File</th><th>Change</th></tr></thead>
+            <tbody>
+              <tr><td><code>docs/js/render.js</code></td><td>Mirrored markup and reusable match cards</td></tr>
+              <tr><td><code>docs/js/interact.js</code></td><td>Match-edge connectors and redraw lifecycle</td></tr>
+              <tr><td><code>docs/css/dashboard.css</code></td><td>Mirrored grid, cards, center stage, and responsive modes</td></tr>
+              <tr><td><code>docs/index.html</code></td><td>Load any new local module required by the map</td></tr>
+            </tbody>
+          </table>
+          <div class="callout" style="margin-top: 24px">
+            <p><strong>Explicit boundary:</strong> no result-sync, FIFA-detail, FotMob, or Bogachev file changes belong in this milestone.</p>
+          </div>
+        </section>
+
+        <section id="sequence">
+          <span class="section-kicker">Implementation path</span>
+          <h2>Five passes, then a hard review stop</h2>
+          <div class="passes">
+            <div class="pass"><div><h3>Structure</h3><p>Derive and test the 31-node tree. Render all game cards in mirrored positions. Render the center Final.</p></div></div>
+            <div class="pass"><div><h3>Visual language</h3><p>Finish card anatomy, state treatments, legend wording, and spacing in dark and light themes.</p></div></div>
+            <div class="pass"><div><h3>Connectors</h3><p>Draw all 30 feeder edges. Verify both bracket views and every redraw trigger.</p></div></div>
+            <div class="pass"><div><h3>Center sculpture</h3><p>Add local Three.js, build the original World Cup-inspired form, review its silhouette, control its lifecycle, and provide the fallback.</p></div></div>
+            <div class="pass"><div><h3>Responsive and review</h3><p>Finish medium and phone behavior, run focused tests, serve locally, and capture review screenshots.</p></div></div>
+          </div>
+          <p style="margin-top: 20px"><strong>Stop after Pass 5.</strong> Match facts and external portraits remain locked until the rebuilt map is approved.</p>
+        </section>
+
+        <section id="acceptance">
+          <span class="section-kicker">Definition of done</span>
+          <h2>Sixteen checks define the first milestone</h2>
+          <ol class="checklist">
+            <li>Both bracket views contain exactly 31 unique game cards.</li>
+            <li>The map contains exactly 30 feeder connections.</li>
+            <li>M101 and M102 feed M104 at the center.</li>
+            <li>The expected eight-game left and right Round-of-32 branches are correct.</li>
+            <li>No match card is clipped or overlaps another at review widths.</li>
+            <li>Flags, names, scores, dates, and placeholders remain legible.</li>
+            <li>Existing pick and actual status meanings remain intact.</li>
+            <li>The legend explains every visible state.</li>
+            <li>The World Cup-inspired sculpture is original, self-hosted, gently animated, visually distinct from the official trophy, and non-essential.</li>
+            <li>Reduced motion and WebGL failure show a clear static cup.</li>
+            <li>Both views switch without layout jumps or stale connectors.</li>
+            <li>No target width produces bracket horizontal overflow or side panning.</li>
+            <li>The phone overview has all 31 nodes and 30 edges, and its vertical list has all 31 readable cards.</li>
+            <li>Existing scoring, builder, share, and parse behavior remains unchanged.</li>
+            <li>No data hover, FotMob, FIFA detail, or Bogachev integration is included.</li>
+            <li>Local screenshots receive approval before the next phase starts.</li>
+          </ol>
+        </section>
+
+        <section id="council">
+          <span class="section-kicker">Technical Taste Council</span>
+          <h2>The design and engineering calls behind the brief</h2>
+          <div class="council">
+            <div class="voice"><b>Karpathy</b><span>Derive one simple tree model from <code>ko_feed</code>.</span></div>
+            <div class="voice"><b>Hanselman</b><span>Make placeholders, unavailable states, and status meaning clear.</span></div>
+            <div class="voice"><b>Russinovich</b><span>Measure connector and WebGL cost. Pause unused rendering work.</span></div>
+            <div class="voice"><b>Willison and Hamel</b><span>Verify every node and feeder edge with focused tests.</span></div>
+            <div class="voice"><b>Sean Grove</b><span>Treat this brief as the stable behavior contract.</span></div>
+            <div class="voice"><b>Yegge</b><span>Stop for visual review before adding the data-hover layer.</span></div>
+            <div class="voice"><b>Litt</b><span>Keep modules and data readable without adding a framework.</span></div>
+          </div>
+        </section>
+
+        <section id="approval" class="approval">
+          <span class="section-kicker">Approval gate</span>
+          <h2>Approve the map milestone or send focused changes</h2>
+          <p>
+            Approval starts implementation only in <code>my-wc26-bracket</code>. The build ends with a served local preview and screenshots. No commit, push, deployment, data-hover work, or production port occurs in this milestone.
+          </p>
+          <div class="approval-actions">
+            <button class="button primary" id="copyApproval" type="button">Copy approval response</button>
+            <button class="button" id="copyFeedback" type="button">Copy revision response</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const root = document.documentElement;
+    const themeButton = document.getElementById("themeButton");
+    const toast = document.getElementById("toast");
+    const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function setTheme(theme) {
+      root.dataset.theme = theme;
+      themeButton.textContent = theme === "dark" ? "Light theme" : "Dark theme";
+    }
+
+    setTheme(darkQuery.matches ? "dark" : "light");
+
+    themeButton.addEventListener("click", () => {
+      setTheme(root.dataset.theme === "dark" ? "light" : "dark");
+    });
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    async function copyResponse(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Response copied. Paste it into Copilot.");
+      } catch {
+        showToast("Clipboard access is blocked. Return to Copilot and type your response.");
+      }
+    }
+
+    document.getElementById("copyApproval").addEventListener("click", () => {
+      copyResponse("I approve the mirrored bracket map rebuild brief. Start the first map milestone in my-wc26-bracket. Stop after the local preview and screenshots.");
+    });
+
+    document.getElementById("copyFeedback").addEventListener("click", () => {
+      copyResponse("Revise the mirrored bracket map rebuild brief with these changes: ");
+    });
+
+    function renderRoughBracket() {
+      const svg = document.getElementById("roughBracket");
+      const ns = "http://www.w3.org/2000/svg";
+      const nodes = [];
+      const cardWidth = 100;
+      const cardHeight = 40;
+      const leafY = [65, 131, 197, 263, 329, 395, 461, 527];
+      const r16Y = [98, 230, 362, 494];
+      const qfY = [164, 428];
+      const sfY = [296];
+
+      function addRound(codes, x, ys, parents) {
+        codes.forEach((code, index) => {
+          nodes.push({ code, x, y: ys[index], parent: parents[index] || null });
+        });
+      }
+
+      addRound(
+        ["M74", "M77", "M73", "M75", "M83", "M84", "M81", "M82"],
+        16,
+        leafY,
+        ["M89", "M89", "M90", "M90", "M93", "M93", "M94", "M94"]
+      );
+      addRound(["M89", "M90", "M93", "M94"], 154, r16Y, ["M97", "M97", "M98", "M98"]);
+      addRound(["M97", "M98"], 292, qfY, ["M101", "M101"]);
+      addRound(["M101"], 430, sfY, ["M104"]);
+      nodes.push({ code: "M104", x: 550, y: 296, parent: null, final: true });
+      addRound(["M102"], 670, sfY, ["M104"]);
+      addRound(["M99", "M100"], 808, qfY, ["M102", "M102"]);
+      addRound(["M91", "M92", "M95", "M96"], 946, r16Y, ["M99", "M99", "M100", "M100"]);
+      addRound(
+        ["M76", "M78", "M79", "M80", "M86", "M88", "M85", "M87"],
+        1084,
+        leafY,
+        ["M91", "M91", "M92", "M92", "M95", "M95", "M96", "M96"]
+      );
+
+      const byCode = new Map(nodes.map((node) => [node.code, node]));
+
+      function element(name, attributes = {}) {
+        const item = document.createElementNS(ns, name);
+        Object.entries(attributes).forEach(([key, value]) => item.setAttribute(key, value));
+        return item;
+      }
+
+      const roundLabels = [
+        [66, "R32"], [204, "R16"], [342, "QF"], [480, "SF"],
+        [600, "FINAL"],
+        [720, "SF"], [858, "QF"], [996, "R16"], [1134, "R32"]
+      ];
+      roundLabels.forEach(([x, label]) => {
+        const text = element("text", { x, y: 18, class: "rough-round" });
+        text.textContent = label;
+        svg.appendChild(text);
+      });
+
+      nodes.forEach((node) => {
+        if (!node.parent) return;
+        const parent = byCode.get(node.parent);
+        const isLeft = node.x < 600;
+        const startX = isLeft ? node.x + cardWidth : node.x;
+        const endX = isLeft ? parent.x : parent.x + cardWidth;
+        const elbowX = (startX + endX) / 2;
+        const path = element("path", {
+          d: `M ${startX} ${node.y} H ${elbowX} V ${parent.y} H ${endX}`,
+          class: `rough-edge${node.parent === "M104" ? " final-edge" : ""}`
+        });
+        svg.appendChild(path);
+      });
+
+      const trophy = element("g", { transform: "translate(600 104)", "aria-hidden": "true" });
+      trophy.appendChild(element("polygon", {
+        points: "0,-28 17,-20 24,-2 16,16 0,23 -16,16 -24,-2 -17,-20",
+        fill: "var(--gold)"
+      }));
+      trophy.appendChild(element("path", {
+        d: "M -20 19 L -9 17 L 0 56 L -10 68 L -21 39 M 20 19 L 9 17 L 0 56 L 10 68 L 21 39",
+        fill: "none",
+        stroke: "var(--gold)",
+        "stroke-width": "8",
+        "stroke-linejoin": "round"
+      }));
+      trophy.appendChild(element("polygon", {
+        points: "-21,62 21,62 29,75 20,86 -20,86 -29,75",
+        fill: "var(--panel-2)",
+        stroke: "var(--gold)",
+        "stroke-width": "3"
+      }));
+      svg.appendChild(trophy);
+
+      const centerLabel = element("text", { x: 600, y: 205, class: "rough-center-label" });
+      centerLabel.textContent = "CENTER STAGE";
+      svg.appendChild(centerLabel);
+
+      nodes.forEach((node) => {
+        const height = node.final ? 52 : cardHeight;
+        const top = node.y - height / 2;
+        const group = element("g");
+        group.appendChild(element("rect", {
+          x: node.x,
+          y: top,
+          width: cardWidth,
+          height,
+          rx: 7,
+          class: `rough-card${node.final ? " final-card" : ""}`
+        }));
+        group.appendChild(element("path", {
+          d: `M ${node.x + 7} ${top} H ${node.x + cardWidth - 7} Q ${node.x + cardWidth} ${top} ${node.x + cardWidth} ${top + 7} V ${top + 12} H ${node.x} V ${top + 7} Q ${node.x} ${top} ${node.x + 7} ${top}`,
+          class: "rough-card-head"
+        }));
+        group.appendChild(element("line", {
+          x1: node.x,
+          y1: top + 12,
+          x2: node.x + cardWidth,
+          y2: top + 12,
+          class: "rough-card-line"
+        }));
+        group.appendChild(element("line", {
+          x1: node.x,
+          y1: top + (node.final ? 32 : 26),
+          x2: node.x + cardWidth,
+          y2: top + (node.final ? 32 : 26),
+          class: "rough-card-line"
+        }));
+
+        const code = element("text", {
+          x: node.x + cardWidth / 2,
+          y: top + 8.5,
+          class: "rough-code"
+        });
+        code.textContent = node.code;
+        group.appendChild(code);
+
+        const rowOneY = top + (node.final ? 22 : 19);
+        const rowTwoY = top + (node.final ? 42 : 33);
+        [rowOneY, rowTwoY].forEach((y, index) => {
+          group.appendChild(element("circle", {
+            cx: node.x + 10,
+            cy: y,
+            r: 3,
+            class: "rough-team-dot",
+            opacity: index ? "0.45" : "0.78"
+          }));
+          group.appendChild(element("line", {
+            x1: node.x + 18,
+            y1: y,
+            x2: node.x + (index ? 67 : 77),
+            y2: y,
+            class: "rough-team-line"
+          }));
+        });
+        svg.appendChild(group);
+      });
+
+      const champion = element("g", { "aria-hidden": "true" });
+      champion.appendChild(element("rect", {
+        x: 558,
+        y: 345,
+        width: 84,
+        height: 22,
+        rx: 11,
+        fill: "var(--gold-soft)",
+        stroke: "var(--gold)"
+      }));
+      const championText = element("text", {
+        x: 600,
+        y: 359,
+        class: "rough-center-label"
+      });
+      championText.textContent = "CHAMPION";
+      champion.appendChild(championText);
+      svg.appendChild(champion);
+    }
+
+    renderRoughBracket();
+
+    const navLinks = [...document.querySelectorAll(".nav a")];
+    const sections = navLinks
+      .map((link) => document.querySelector(link.getAttribute("href")))
+      .filter(Boolean);
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        navLinks.forEach((link) => {
+          link.setAttribute(
+            "aria-current",
+            String(link.getAttribute("href") === `#${visible.target.id}`)
+          );
+        });
+      }, { rootMargin: "-18% 0px -65% 0px", threshold: [0, 0.2, 0.5] });
+
+      sections.forEach((section) => observer.observe(section));
+    }
+  </script>
+</body>
+</html>

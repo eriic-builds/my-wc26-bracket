@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design Lab — RIVR-inspired hero (your palette)</title>
+<meta name="description" content="A local design preview: RIVR-inspired smooth-edge + glassmorphism hero, rebuilt in vanilla CSS on the World Cup bracket theme tokens.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
+<!-- Inherit the live app's full theme-token system (dark / light / easy / geocities / minecraft / winxp / doodle) -->
+<link rel="stylesheet" href="css/dashboard.css">
+<style>
+/* ==========================================================================
+   DESIGN LAB — RIVR-inspired design language, ported to vanilla CSS.
+   Every rule is driven by the existing --tokens from dashboard.css, so the
+   whole thing re-skins itself when you switch themes. No hard-coded RIVR
+   navy/gray, no React/Tailwind/motion — just the *techniques*:
+     • big soft "framed" rounded container      (the smooth edges)
+     • pronounced frosted-glass floating cards   (glassmorphism)
+     • pill buttons with an inner circular chip
+     • the faux-cutout corner notch (SVG masks)
+     • CSS keyframe entrance animations
+   ========================================================================== */
+
+/* --- Top bar: lab label + a real, self-contained theme switcher ---------- */
+.dl-topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;max-width:1536px;margin:0 auto;padding:14px 22px}
+.dl-lab-label{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.dl-lab-label b{color:var(--text);font-weight:800}
+.dl-lab-label .dl-dim{opacity:.7}
+
+/* --- The framed hero canvas (RIVR's rounded section) --------------------- */
+.dl-wrap{max-width:1536px;margin:0 auto;padding:6px 12px 44px;min-height:calc(100vh - 62px);display:flex}
+@media(min-width:768px){.dl-wrap{padding:6px 20px 52px}}
+
+.dl-frame{position:relative;flex:1;width:100%;min-height:min(780px,calc(100vh - 108px));
+  border-radius:clamp(1.5rem,4vw,3rem);overflow:hidden;isolation:isolate;
+  border:1px solid var(--border2);box-shadow:var(--shadow);
+  background:var(--glass);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;flex-direction:column;
+  animation:dl-scale-in .8s cubic-bezier(.2,.7,.2,1) both}
+
+/* Layered gradient "background" in place of RIVR's video — built from tokens */
+.dl-frame-bg{position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(60% 82% at 12% 6%, var(--g1), transparent 70%),
+    radial-gradient(56% 76% at 92% 2%, var(--g2), transparent 70%),
+    radial-gradient(72% 72% at 62% 120%, var(--g3), transparent 72%),
+    linear-gradient(120deg, color-mix(in srgb,var(--blue) 12%,transparent), color-mix(in srgb,var(--teal) 12%,transparent));
+  filter:saturate(1.05)}
+.dl-frame-inner{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
+
+/* --- In-frame nav (brand · links · pill button) ------------------------- */
+.dl-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 24px}
+@media(min-width:768px){.dl-nav{padding:26px 40px}}
+.dl-brand{display:inline-flex;align-items:center;gap:11px;font-weight:800;color:var(--text)}
+.dl-brand .orb{width:30px;height:30px;border-radius:50%;background:var(--grad);box-shadow:0 0 16px rgba(0,151,244,.5);flex:0 0 auto}
+.dl-brand small{display:block;color:var(--muted);font-weight:500;font-size:.72rem;letter-spacing:.04em}
+.dl-nav-links{display:none;align-items:center;gap:26px}
+@media(min-width:960px){.dl-nav-links{display:flex}}
+.dl-nav-links span{display:inline-flex;align-items:center;gap:4px;color:var(--text2);font-size:.85rem;font-weight:600;
+  opacity:.82;cursor:pointer;transition:opacity .15s}
+.dl-nav-links span:hover{opacity:1}
+.dl-nav-links .car{font-size:.7em;opacity:.7}
+
+/* --- Pill button with an inner circular icon chip ----------------------- */
+.dl-pillbtn{display:inline-flex;align-items:center;gap:10px;font:inherit;font-weight:700;font-size:.86rem;cursor:pointer;
+  padding:6px 18px 6px 6px;border-radius:999px;border:1px solid transparent;color:#04121a;
+  background:var(--grad);box-shadow:0 6px 18px rgba(0,151,244,.30);
+  transition:transform .15s,box-shadow .15s,filter .15s}
+.dl-pillbtn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,151,244,.40)}
+.dl-pillbtn:active{transform:translateY(0)}
+.dl-pillbtn .dl-chip{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.30);font-size:.95rem;line-height:1}
+.dl-pillbtn.ghost{background:var(--panel);color:var(--text);border-color:var(--border2);box-shadow:var(--shadow)}
+.dl-pillbtn.ghost .dl-chip{background:var(--hover)}
+
+/* --- Frosted badge (RIVR HeroBadge) ------------------------------------- */
+.dl-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border-radius:999px;width:fit-content;
+  background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--border2);color:var(--text2);font-size:.8rem;font-weight:600;
+  animation:dl-fade-up .6s ease-out both}
+.dl-badge .dl-livedot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);
+  animation:pulse 1.8s infinite}
+
+/* --- Hero text ---------------------------------------------------------- */
+.dl-hero{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;
+  max-width:920px;margin:0 auto;padding:14px 24px 150px}
+@media(min-width:768px){.dl-hero{padding:24px 24px 150px}}
+.dl-hero h1{margin:0;font-weight:800;letter-spacing:-.02em;line-height:1.04;color:var(--text);
+  font-size:clamp(2.4rem,6vw,5rem);animation:dl-scale-in .8s ease-out .2s both}
+.dl-hero h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dl-hero p{margin:0;max-width:60ch;color:var(--text2);opacity:.9;line-height:1.55;
+  font-size:clamp(1rem,1.6vw,1.18rem);animation:dl-fade-up .8s ease-out .4s both}
+.dl-badges{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:4px;
+  animation:dl-fade-up .8s ease-out .52s both}
+
+/* --- Floating glass stat card (RIVR BottomLeftCard) --------------------- */
+.dl-statcard{position:absolute;left:20px;bottom:20px;z-index:2;display:flex;flex-direction:column;gap:12px;
+  padding:18px 20px;min-width:184px;width:fit-content;border-radius:clamp(1.1rem,2.6vw,2rem);
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border2);box-shadow:var(--shadow);
+  animation:dl-slide-left .8s ease-out .25s both}
+@media(min-width:768px){.dl-statcard{left:40px;bottom:40px}}
+.dl-statcard .dl-num{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;letter-spacing:-.02em;color:var(--text);line-height:1}
+.dl-statcard .dl-lbl{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+
+/* --- Faux-cutout corner (RIVR BottomRightCorner) ------------------------ */
+/* The panel + its two SVG masks are painted in var(--bg) — the page colour —
+   so it reads as a clean notch bitten out of the gradient frame, with smooth
+   concave corners. --dl-r is shared by the panel radius and the mask size. */
+.dl-corner{--dl-r:clamp(1.5rem,3vw,3rem);position:absolute;right:0;bottom:0;z-index:2;
+  display:flex;align-items:center;gap:16px;padding:18px 24px 18px 34px;
+  background:var(--bg);border-top-left-radius:var(--dl-r);
+  animation:dl-fade-up .8s ease-out .45s both}
+.dl-corner .dl-mask{position:absolute;width:var(--dl-r);height:var(--dl-r);pointer-events:none;line-height:0}
+.dl-corner .dl-mask.top{top:calc(-1 * var(--dl-r));right:0}
+.dl-corner .dl-mask.left{bottom:0;left:calc(-1 * var(--dl-r))}
+.dl-corner .dl-mask svg{width:100%;height:100%;display:block}
+.dl-corner .dl-mask path{fill:var(--bg)}
+.dl-corner .dl-cicon{flex:0 0 auto;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--hover);border:1px solid var(--border2);font-size:1.2rem}
+.dl-corner .dl-ctxt{display:flex;flex-direction:column;gap:2px}
+.dl-corner .dl-ctitle{font-size:clamp(1rem,2vw,1.25rem);font-weight:700;color:var(--text);white-space:nowrap}
+.dl-corner .dl-clink{display:inline-flex;align-items:center;gap:4px;font-size:.82rem;font-weight:600;color:var(--muted);
+  cursor:pointer;transition:color .15s}
+.dl-corner .dl-clink:hover{color:var(--text)}
+
+@media(max-width:680px){
+  .dl-statcard{left:12px;bottom:12px;padding:12px 14px;min-width:0}
+  .dl-corner{padding:12px 16px 12px 26px}
+  .dl-corner .dl-cicon{width:42px;height:42px}
+  .dl-corner .dl-ctitle{font-size:1rem}
+}
+
+/* --- Entrance animations (replacing motion/react) ----------------------- */
+@keyframes dl-fade-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes dl-scale-in{from{opacity:0;transform:scale(.972)}to{opacity:1;transform:none}}
+@keyframes dl-slide-left{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+  .dl-frame,.dl-badge,.dl-hero h1,.dl-hero p,.dl-badges,.dl-statcard,.dl-corner{animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar: lab label + working theme switcher (mirrors the live app) -->
+<div class="dl-topbar">
+  <div class="dl-lab-label">🎨 <b>Design Lab</b> <span class="dl-dim">· RIVR-inspired · sample data · your palette + themes</span></div>
+  <div class="modes glass">
+    <div class="theme-toggle" role="group" aria-label="Light or dark theme">
+      <button data-mode="light" class="tg-ic" title="Light">☀️</button>
+      <button data-mode="dark" class="tg-ic" title="Dark">🌙</button>
+    </div>
+    <button data-mode="easy" class="mode-lbl" title="Easy reading mode"><span class="mi">👓</span> Easy</button>
+    <div class="fun-wrap" id="funWrap">
+      <button class="fun-btn" id="funBtn" aria-haspopup="true" aria-expanded="false" title="Fun themes"><span class="mi">🎨</span> Fun <span class="fun-car">▾</span></button>
+      <div class="fun-menu glass" id="funMenu" role="menu">
+        <button data-mode="geocities" role="menuitem"><span class="fm-em">🌐</span> GeoCities</button>
+        <button data-mode="minecraft" role="menuitem"><span class="fm-em">⛏️</span> Minecraft</button>
+        <button data-mode="winxp" role="menuitem"><span class="fm-em">🪟</span> Windows XP</button>
+        <button data-mode="doodle" role="menuitem"><span class="fm-em">✏️</span> Doodle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- The framed hero canvas -->
+<div class="dl-wrap">
+  <section class="dl-frame">
+    <div class="dl-frame-bg" aria-hidden="true"></div>
+    <div class="dl-frame-inner">
+
+      <!-- Nav -->
+      <nav class="dl-nav">
+        <div class="dl-brand">
+          <span class="orb" aria-hidden="true"></span>
+          <div>BYOB<small>Bring Your Own Bracket</small></div>
+        </div>
+        <div class="dl-nav-links">
+          <span>Overview</span>
+          <span>Scorecard <span class="car">▾</span></span>
+          <span>Bracket map</span>
+          <span>Final four <span class="car">▾</span></span>
+        </div>
+        <button class="dl-pillbtn" type="button">
+          <span class="dl-chip" aria-hidden="true">🔄</span> Sync now
+        </button>
+      </nav>
+
+      <!-- Hero text -->
+      <div class="dl-hero">
+        <span class="dl-badge"><span class="dl-livedot" aria-hidden="true"></span> Live scoring</span>
+        <h1>Backing <span class="g">Argentina</span> — and still in it</h1>
+        <p>Your <b>Quarter-finals</b> sit <b>5 of 8 final</b> — you're <b>4 of 6 right</b> this round,
+        with <b>78 points</b> banked and <b>2</b> still live. Track any team through the bracket,
+        scored live, entirely in your browser.</p>
+        <div class="dl-badges">
+          <span class="pill live"><span class="dot"></span>78 pts confirmed</span>
+          <span class="pill"><span class="dot"></span>Quarter-finals 4/6</span>
+          <span class="pill"><span class="dot"></span>Max attainable 126</span>
+          <span class="pill"><span class="dot"></span>Argentina alive</span>
+        </div>
+      </div>
+
+      <!-- Floating glass stat card -->
+      <div class="dl-statcard">
+        <div>
+          <div class="dl-num">78</div>
+          <div class="dl-lbl">Points confirmed</div>
+        </div>
+        <button class="dl-pillbtn ghost" type="button">
+          <span class="dl-chip" aria-hidden="true">🔎</span> Track a team
+        </button>
+      </div>
+
+      <!-- Faux-cutout corner notch -->
+      <div class="dl-corner">
+        <div class="dl-mask top" aria-hidden="true">
+          <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg"><path d="M56 56V0C56 30.9279 30.9279 56 0 56H56Z"/></svg>
+        </div>
+        <div class="dl-mask left" aria-hidden="true">
+          <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg"><path d="M56 56H0C30.9279 56 56 30.9279 56 0V56Z"/></svg>
+        </div>
+        <div class="dl-cicon" aria-hidden="true">🧮</div>
+        <div class="dl-ctxt">
+          <div class="dl-ctitle">How scoring works</div>
+          <div class="dl-clink">Scoring &amp; schedule <span aria-hidden="true">›</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- Self-contained theme switcher (mirrors interact.js setTheme, shares localStorage 'wcb.theme') -->
+<script>
+(function(){
+  var root=document.documentElement, LS=window.localStorage, K='wcb.theme';
+  var FUN={geocities:1,minecraft:1,winxp:1,doodle:1};
+  var funWrap=document.getElementById('funWrap'), funBtn=document.getElementById('funBtn');
+  function closeFun(){ if(funWrap){ funWrap.classList.remove('open'); if(funBtn) funBtn.setAttribute('aria-expanded','false'); } }
+  function setTheme(t){
+    root.setAttribute('data-theme',t);
+    document.querySelectorAll('.modes button').forEach(function(b){ if(b.dataset.mode) b.classList.toggle('on', b.dataset.mode===t); });
+    if(funBtn) funBtn.classList.toggle('on', !!FUN[t]);
+    try{ LS.setItem(K,t); }catch(e){}
+    closeFun();
+  }
+  document.querySelectorAll('.modes button').forEach(function(b){ if(b.dataset.mode) b.addEventListener('click', function(){ setTheme(b.dataset.mode); }); });
+  if(funBtn){ funBtn.addEventListener('click', function(e){ e.stopPropagation(); var open=funWrap.classList.toggle('open'); funBtn.setAttribute('aria-expanded', open?'true':'false'); }); }
+  document.addEventListener('click', function(e){ if(funWrap && !funWrap.contains(e.target)) closeFun(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeFun(); });
+  var t0; try{ t0=LS.getItem(K); }catch(e){}
+  setTheme(t0||'dark');
+})();
+</script>
+</body>
+</html>

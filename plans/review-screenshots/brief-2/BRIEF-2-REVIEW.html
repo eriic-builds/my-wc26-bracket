@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brief 2 Review | Match details and data portraits</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d12;
+      --panel: #151820;
+      --panel-2: #1b1f29;
+      --text: #f5f7fb;
+      --muted: #aab2c0;
+      --line: #303746;
+      --blue: #31a8ff;
+      --teal: #18d1b2;
+      --gold: #ffd24a;
+      --red: #ff6b78;
+      --green: #78df9a;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .32);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(49, 168, 255, .13), transparent 34rem),
+        radial-gradient(circle at 90% 20%, rgba(24, 209, 178, .10), transparent 38rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    button, input { font: inherit; }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    a:hover { color: #80ccff; }
+    code {
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0d1016;
+      color: #bce8ff;
+      font-size: .9em;
+    }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    .hero { padding: 64px 0 30px; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--teal);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(2.2rem, 6vw, 4.8rem);
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+    .hero-copy { max-width: 780px; margin: 20px 0 0; color: var(--muted); font-size: 1.06rem; }
+    .status-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(21, 24, 32, .82);
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .status.blocked::before { background: var(--gold); }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .metric {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, rgba(27, 31, 41, .94), rgba(18, 21, 28, .92));
+      box-shadow: var(--shadow);
+    }
+    .metric strong { display: block; color: var(--text); font-size: 1.7rem; line-height: 1; }
+    .metric span { display: block; margin-top: 8px; color: var(--muted); font-size: .78rem; }
+    .tabs-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-block: 1px solid var(--line);
+      background: rgba(11, 13, 18, .88);
+      backdrop-filter: blur(18px);
+    }
+    .tabs { display: flex; gap: 6px; padding: 10px 0; overflow-x: auto; }
+    .tab {
+      flex: 0 0 auto;
+      padding: 8px 13px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 750;
+      font-size: .82rem;
+    }
+    .tab:hover { color: var(--text); background: var(--panel); }
+    .tab[aria-selected="true"] { color: #06111a; background: var(--blue); }
+    main { padding: 28px 0 80px; }
+    .panel[hidden] { display: none; }
+    .panel { animation: enter .18s ease-out; }
+    @keyframes enter { from { opacity: 0; transform: translateY(4px); } }
+    .section-head { margin: 0 0 18px; }
+    .section-head h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.2rem); letter-spacing: -.035em; }
+    .section-head p { max-width: 780px; margin: 8px 0 0; color: var(--muted); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(21, 24, 32, .9);
+      box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 8px; font-size: 1rem; }
+    .card p { margin: 0; color: var(--muted); }
+    .card ul { margin: 12px 0 0; padding-left: 20px; color: var(--muted); }
+    .card li + li { margin-top: 7px; }
+    .eli5 {
+      border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+      background: linear-gradient(145deg, rgba(255, 210, 74, .09), rgba(21, 24, 32, .94));
+    }
+    .eli5 .label {
+      display: inline-block;
+      margin-bottom: 10px;
+      color: var(--gold);
+      font-size: .72rem;
+      font-weight: 850;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .stage-list { display: grid; gap: 12px; }
+    details.stage {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(21, 24, 32, .9);
+      overflow: clip;
+    }
+    details.stage[open] { border-color: color-mix(in srgb, var(--blue) 55%, var(--line)); }
+    details.stage summary {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px;
+      cursor: pointer;
+      list-style: none;
+    }
+    details.stage summary::-webkit-details-marker { display: none; }
+    .stage-num {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(49, 168, 255, .14);
+      color: var(--blue);
+      font-weight: 850;
+    }
+    .stage-title strong { display: block; }
+    .stage-title span { color: var(--muted); font-size: .8rem; }
+    .done { color: var(--green); font-size: .76rem; font-weight: 850; text-transform: uppercase; }
+    .stage-body { padding: 0 20px 20px 72px; color: var(--muted); }
+    .stage-body h4 { margin: 14px 0 6px; color: var(--text); }
+    .stage-body p { margin: 0; }
+    .stage-body ul { margin: 8px 0 0; padding-left: 20px; }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+    .flow-node {
+      position: relative;
+      min-height: 116px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+    .flow-node:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      right: -9px;
+      top: 44%;
+      z-index: 2;
+      color: var(--teal);
+      font-weight: 900;
+    }
+    .flow-node:hover, .flow-node.active { border-color: var(--teal); background: var(--panel-2); }
+    .flow-node small { display: block; margin-top: 8px; color: var(--muted); }
+    .flow-explain {
+      margin-top: 12px;
+      padding: 16px;
+      border: 1px solid color-mix(in srgb, var(--teal) 45%, var(--line));
+      border-radius: 13px;
+      background: rgba(24, 209, 178, .07);
+      color: var(--muted);
+    }
+    .flow-explain strong { color: var(--text); }
+    .rule-table { width: 100%; border-collapse: collapse; }
+    .rule-table th, .rule-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .rule-table th { color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+    .rule-table td { color: var(--muted); }
+    .rule-table td:first-child { color: var(--text); font-weight: 750; }
+    .pass { color: var(--green); font-weight: 800; }
+    .warn { color: var(--gold); font-weight: 800; }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .shot {
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--panel);
+      color: var(--text);
+      text-align: left;
+      cursor: zoom-in;
+    }
+    .shot:hover { border-color: var(--blue); transform: translateY(-2px); }
+    .shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #07090d; }
+    .shot span { display: block; padding: 11px 12px; font-weight: 750; font-size: .8rem; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .filter {
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .76rem;
+      font-weight: 750;
+    }
+    .filter.active { color: #06111a; background: var(--teal); border-color: var(--teal); }
+    .files { display: grid; gap: 8px; }
+    .file {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel);
+    }
+    .file[hidden] { display: none; }
+    .file b { color: var(--blue); font-size: .76rem; text-transform: uppercase; }
+    .file a { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82rem; }
+    .file p { grid-column: 2; margin: -5px 0 0; color: var(--muted); font-size: .78rem; }
+    .lesson { min-height: 180px; }
+    .lesson strong { color: var(--gold); }
+    .gate {
+      margin-top: 18px;
+      padding: 20px;
+      border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line));
+      border-radius: var(--radius);
+      background: rgba(255, 210, 74, .08);
+    }
+    .gate h3 { margin: 0 0 8px; }
+    .gate p { margin: 0; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .action {
+      display: inline-flex;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 750;
+      font-size: .82rem;
+      cursor: pointer;
+    }
+    .action.primary { color: #06111a; background: var(--blue); border-color: var(--blue); }
+    dialog {
+      width: min(1100px, calc(100% - 24px));
+      max-height: 92vh;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, .78); backdrop-filter: blur(5px); }
+    .light-head { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .light-head strong { align-self: center; }
+    .light-close { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-2); color: var(--text); cursor: pointer; }
+    #light-image { display: block; width: 100%; max-height: calc(92vh - 62px); object-fit: contain; background: #07090d; }
+    footer { padding: 30px 0 60px; color: var(--muted); font-size: .8rem; text-align: center; }
+    @media (max-width: 900px) {
+      .metrics, .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .flow-node::after { display: none; }
+      .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 20px, 1180px); }
+      .hero { padding-top: 40px; }
+      .metrics, .grid-2, .grid-3, .gallery { grid-template-columns: 1fr; }
+      details.stage summary { grid-template-columns: 38px 1fr; }
+      details.stage summary .done { grid-column: 2; }
+      .stage-body { padding-left: 18px; }
+      .flow { grid-template-columns: 1fr; }
+      .file { grid-template-columns: 1fr; }
+      .file p { grid-column: 1; margin-top: 0; }
+    }
+    @media print {
+      .tabs-wrap, .actions, .filter-row { display: none; }
+      .panel[hidden] { display: block; }
+      body { background: #fff; color: #111; }
+      .card, details.stage, .file, .metric { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="shell">
+      <p class="eyebrow">Brief 2 local review report</p>
+      <h1>Match facts and data portraits, explained simply</h1>
+      <p class="hero-copy">
+        This report shows what was planned, what was built, why each decision exists,
+        how the pieces connect, and what you can learn from the implementation.
+      </p>
+      <div class="status-row">
+        <span class="status">Local implementation complete</span>
+        <span class="status">Automated and browser checks pass</span>
+        <span class="status blocked">Production portrait permission still required</span>
+      </div>
+      <div class="metrics" aria-label="Key results">
+        <div class="metric"><strong>25/25</strong><span>completed matches have reviewed portrait mappings</span></div>
+        <div class="metric"><strong>0</strong><span>third-party requests on initial load or keyboard focus</span></div>
+        <div class="metric"><strong>1</strong><span>maximum portrait iframe at any time</span></div>
+        <div class="metric"><strong>500 ms</strong><span>mouse intent delay before external portrait loading</span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs-wrap">
+    <nav class="tabs shell" role="tablist" aria-label="Report sections">
+      <button class="tab" role="tab" aria-selected="true" data-tab="overview">Overview</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="execution">Plan execution</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="architecture">Architecture</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="safety">Safety</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="evidence">Evidence</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="learning">Learning</button>
+    </nav>
+  </div>
+
+  <main class="shell">
+    <section class="panel" role="tabpanel" data-panel="overview">
+      <div class="section-head">
+        <h2>What Brief 2 delivered</h2>
+        <p>Completed games now tell a deeper story without weakening the original bracket experience.</p>
+      </div>
+      <div class="grid-2">
+        <article class="card">
+          <h3>The user experience</h3>
+          <ul>
+            <li>Hover a completed match header for compact FIFA facts.</li>
+            <li>Hover a country row for country history, not repeated tournament placement.</li>
+            <li>Click, tap, Enter, or Space to open complete match details.</li>
+            <li>Use one arrow to expand match details, then a separate arrow to expand only the portrait.</li>
+            <li>See a first-use toast, plus one delayed reminder after a fast dismissal.</li>
+            <li>Use the same interaction in Mirrored and Sideways without adding cramped Sideways cards.</li>
+          </ul>
+        </article>
+        <article class="card eli5">
+          <span class="label">ELI5</span>
+          <h3>The bracket became a storybook</h3>
+          <p>
+            The score card is the book cover. Hovering shows the short summary.
+            Clicking opens the full page. The animated portrait is a picture inside
+            that page. It stays asleep until you clearly ask to see it.
+          </p>
+        </article>
+        <article class="card">
+          <h3>The data result</h3>
+          <ul>
+            <li>25 deterministic FIFA detail records for M73 through M97.</li>
+            <li>Goals, cards, venue, attendance, referee, round, score, and source.</li>
+            <li>25 reviewed external portrait identities with exact slugs and IDs.</li>
+            <li>Future FIFA facts generate during the existing result sync.</li>
+            <li>Future external slugs remain manual until author permission exists.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>The final interface refinements</h3>
+          <ul>
+            <li>User-facing name changed from Bracket map to Bracket Table.</li>
+            <li>Toast copy uses a concrete example: M97.</li>
+            <li>Portrait credit links Alexander Bogachev's site.</li>
+            <li>Credit row includes LinkedIn <code>in/ericxlam</code> and GitHub <code>@eriic-builds</code>.</li>
+            <li>Sideways keeps its compact layout with no new outer card.</li>
+          </ul>
+        </article>
+      </div>
+      <div class="gate">
+        <h3>Current stop point</h3>
+        <p>
+          This is a local review candidate. No commit, push, deployment, production port,
+          remote manifest automation, FotMob integration, or odds work was performed.
+        </p>
+      </div>
+      <div class="actions">
+        <a class="action primary" href="../../../docs/index.html">Open the local dashboard</a>
+        <button class="action" type="button" onclick="window.print()">Print this report</button>
+      </div>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="execution" hidden>
+      <div class="section-head">
+        <h2>How the six plans executed</h2>
+        <p>Open each stage to see the goal, implementation, reason, and learning point.</p>
+      </div>
+      <div class="stage-list">
+        <details class="stage" open>
+          <summary>
+            <span class="stage-num">1</span>
+            <span class="stage-title"><strong>Match-detail contract and frozen fixtures</strong><span>Define truth before building UI</span></span>
+            <span class="done">Complete</span>
+          </summary>
+          <div class="stage-body">
+            <h4>What</h4>
+            <p>Defined a strict JSON contract and froze exact FIFA calendar and M97 live payloads.</p>
+            <h4>Why</h4>
+            <p>Live APIs change. Frozen inputs let the parser prove the same result every time.</p>
+            <h4>Learning moment</h4>
+            <p>A reliable feature begins with a stable contract, not a component. Tests become much easier once inputs and outputs are explicit.</p>
+            <p><a href="../../brief-2-match-data-and-portraits/PLAN-match-details-contract-and-fixtures.md">Read plan 1</a></p>
+          </div>
+        </details>
+        <details class="stage">
+          <summary>
+            <span class="stage-num">2</span>
+            <span class="stage-title"><strong>FIFA details sync pipeline</strong><span>Generate facts with the existing scheduled sync</span></span>
+            <span class="done">Complete</span>
+          </summary>
+          <div class="stage-body">
+            <h4>What</h4>
+            <p>Preserved FIFA routing IDs, reused live payloads, merged cached details, and wrote deterministic <code>match-details.json</code>.</p>
+            <h4>Why</h4>
+            <p>The existing result bot already knows when matches finish. Extending it avoids a second competing scheduler.</p>
+            <h4>Learning moment</h4>
+            <p>Reuse the trusted pipeline. A new data feature is safer when it shares identity, retry, and commit boundaries with existing results.</p>
+            <p><a href="../../brief-2-match-data-and-portraits/PLAN-fifa-details-sync-pipeline.md">Read plan 2</a></p>
+          </div>
+        </details>
+        <details class="stage">
+          <summary>
+            <span class="stage-num">3</span>
+            <span class="stage-title"><strong>Fact-card interaction</strong><span>Separate match hover from country hover</span></span>
+            <span class="done">Complete</span>
+          </summary>
+          <div class="stage-body">
+            <h4>What</h4>
+            <p>Added compact local facts after 150 ms, keyboard focus access, viewport-aware positioning, and strict Actual-path isolation.</p>
+            <h4>Why</h4>
+            <p>The two-country match shell and the individual country rows mean different things. Their hover behavior must remain separate.</p>
+            <h4>Learning moment</h4>
+            <p>Interaction boundaries should follow the meaning of the object. Parent card means match. Child row means country.</p>
+            <p><a href="../../brief-2-match-data-and-portraits/PLAN-fact-card-interaction.md">Read plan 3</a></p>
+          </div>
+        </details>
+        <details class="stage">
+          <summary>
+            <span class="stage-num">4</span>
+            <span class="stage-title"><strong>Full match dialog</strong><span>Make hover optional, not required</span></span>
+            <span class="done">Complete</span>
+          </summary>
+          <div class="stage-body">
+            <h4>What</h4>
+            <p>Added a native dialog for click, tap, Enter, and Space with Escape handling, focus return, and mobile-safe overflow.</p>
+            <h4>Why</h4>
+            <p>Hover is unavailable on touch screens and difficult for keyboard users. The full dialog provides an equal route.</p>
+            <h4>Learning moment</h4>
+            <p>Accessibility is not a separate version. It is a second input path into the same feature and data.</p>
+            <p><a href="../../brief-2-match-data-and-portraits/PLAN-full-match-dialog.md">Read plan 4</a></p>
+          </div>
+        </details>
+        <details class="stage">
+          <summary>
+            <span class="stage-num">5</span>
+            <span class="stage-title"><strong>Permission-gated portrait shell</strong><span>Embed only reviewed identities on clear intent</span></span>
+            <span class="done">Complete</span>
+          </summary>
+          <div class="stage-body">
+            <h4>What</h4>
+            <p>Added 25 reviewed mappings, a 500 ms hover intent timer, one reusable iframe, separate match and portrait expansion, direct links, and narrow-width fallback.</p>
+            <h4>Why</h4>
+            <p>The external page runs analytics and uses a different naming vocabulary. Loading must be deliberate and identity must fail closed.</p>
+            <h4>Learning moment</h4>
+            <p>Technical ability is not permission. Build the safe integration locally, then keep production locked until written approval exists.</p>
+            <p><a href="../../brief-2-match-data-and-portraits/PLAN-portrait-shell.md">Read plan 5</a></p>
+          </div>
+        </details>
+        <details class="stage">
+          <summary>
+            <span class="stage-num">6</span>
+            <span class="stage-title"><strong>Combined validation and review</strong><span>Prove the complete behavior and stop</span></span>
+            <span class="done">Complete</span>
+          </summary>
+          <div class="stage-body">
+            <h4>What</h4>
+            <p>Ran frozen rendering, scoring, builder, share, parser, Python fixture, schema, workflow, browser lifecycle, privacy, responsive, and screenshot checks.</p>
+            <h4>Why</h4>
+            <p>Each unit worked alone. The final stage proves map, facts, dialog, portrait, cleanup, and degraded states work together.</p>
+            <h4>Learning moment</h4>
+            <p>Integration evidence matters more than a collection of passing unit tests. Verify the real user journey at the end.</p>
+            <p><a href="../../brief-2-match-data-and-portraits/PLAN-combined-validation-review.md">Read plan 6</a></p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="architecture" hidden>
+      <div class="section-head">
+        <h2>How the codebase works</h2>
+        <p>Click each box. The explanation below changes to show that layer's job.</p>
+      </div>
+      <div class="flow" aria-label="FIFA match detail data flow">
+        <button class="flow-node active" data-flow="fifa"><strong>FIFA feed</strong><small>Calendar, live events, venue, officials</small></button>
+        <button class="flow-node" data-flow="parser"><strong>Pure parser</strong><small>Normalize quirks into one contract</small></button>
+        <button class="flow-node" data-flow="merge"><strong>Merge and validate</strong><small>Keep good cached facts and reject conflicts</small></button>
+        <button class="flow-node" data-flow="json"><strong>Local JSON</strong><small>Static, deterministic browser input</small></button>
+        <button class="flow-node" data-flow="ui"><strong>Browser UI</strong><small>Facts, dialog, portrait shell</small></button>
+      </div>
+      <div class="flow-explain" id="flow-explain">
+        <strong>FIFA feed:</strong> The official source provides match identity and facts.
+        The browser never calls FIFA directly.
+      </div>
+
+      <div class="grid-2" style="margin-top: 16px">
+        <article class="card">
+          <h3>Core architecture observation</h3>
+          <p>
+            This is a static no-build application. Python prepares shared result data.
+            Vanilla JavaScript renders each person's local bracket. Optional match details
+            are loaded from same-origin JSON and never block the core dashboard.
+          </p>
+        </article>
+        <article class="card eli5">
+          <span class="label">ELI5</span>
+          <h3>Kitchen and dining room</h3>
+          <p>
+            Python is the kitchen that prepares clean ingredients. JSON is the serving tray.
+            JavaScript is the dining room that arranges the meal for each visitor.
+            If one optional side dish is missing, dinner still works.
+          </p>
+        </article>
+      </div>
+
+      <div class="section-head" style="margin-top: 28px">
+        <h2>Portrait identity has four locks</h2>
+      </div>
+      <div class="grid-3">
+        <article class="card"><h3>1. Team pair</h3><p>Both reviewed teams must equal the FIFA participants.</p></article>
+        <article class="card"><h3>2. Oriented score</h3><p>The score follows the mapping's team order and treats shootouts separately.</p></article>
+        <article class="card"><h3>3. FIFA date</h3><p>The canonical kickoff date must agree, including reviewed midnight rollover cases.</p></article>
+        <article class="card"><h3>4. Stage</h3><p>Round of 16, Quarter-final, and other labels must normalize to the same stage.</p></article>
+        <article class="card"><h3>Allowed host</h3><p>Every URL starts with exactly <code>https://wc26.bogachev.fr</code>.</p></article>
+        <article class="card"><h3>Allowed slug</h3><p>Only a reviewed lowercase <code>abc-def</code> slug is accepted.</p></article>
+      </div>
+
+      <div class="section-head" style="margin-top: 28px">
+        <h2>Files by layer</h2>
+        <p>Filter the map to see where each responsibility lives.</p>
+      </div>
+      <div class="filter-row" aria-label="File filters">
+        <button class="filter active" data-filter="all">All</button>
+        <button class="filter" data-filter="pipeline">Pipeline</button>
+        <button class="filter" data-filter="browser">Browser</button>
+        <button class="filter" data-filter="data">Data</button>
+        <button class="filter" data-filter="test">Tests</button>
+        <button class="filter" data-filter="evidence">Evidence</button>
+      </div>
+      <div class="files">
+        <div class="file" data-kind="pipeline"><b>Pipeline</b><a href="../../../scripts/match_details.py">scripts/match_details.py</a><p>Pure FIFA parsers, merge rules, state calculation, deterministic serialization.</p></div>
+        <div class="file" data-kind="pipeline"><b>Pipeline</b><a href="../../../scripts/fetch_results.py">scripts/fetch_results.py</a><p>Existing result sync extended to preserve IDs and orchestrate detail updates.</p></div>
+        <div class="file" data-kind="pipeline"><b>Validator</b><a href="../../../scripts/validate_match_details.py">scripts/validate_match_details.py</a><p>Cross-file facts, identity, slug, stage, score, and coverage validation.</p></div>
+        <div class="file" data-kind="browser"><b>Browser</b><a href="../../../docs/js/match-details.js">docs/js/match-details.js</a><p>Fact card, toast, reminder, dialog, portrait lifecycle, expansion, and cleanup.</p></div>
+        <div class="file" data-kind="browser"><b>Browser</b><a href="../../../docs/js/main.js">docs/js/main.js</a><p>Optional resource loading and teardown-safe initialization.</p></div>
+        <div class="file" data-kind="browser"><b>Renderer</b><a href="../../../docs/js/render.js">docs/js/render.js</a><p>Actual-path hooks and Bracket Table wording.</p></div>
+        <div class="file" data-kind="browser"><b>Styles</b><a href="../../../docs/css/dashboard.css">docs/css/dashboard.css</a><p>Compact facts, dialog, portrait scaling, toast, icons, and responsive fallback.</p></div>
+        <div class="file" data-kind="data"><b>Data</b><a href="../../../docs/data/match-details.json">docs/data/match-details.json</a><p>25 generated FIFA detail records.</p></div>
+        <div class="file" data-kind="data"><b>Data</b><a href="../../../docs/data/match-portraits.json">docs/data/match-portraits.json</a><p>25 reviewed portrait identities and slugs.</p></div>
+        <div class="file" data-kind="test"><b>Tests</b><a href="../../../tests/match_details.py">tests/match_details.py</a><p>Hermetic Python parser, merge, validation, and coverage cases.</p></div>
+        <div class="file" data-kind="test"><b>Tests</b><a href="../../../tests/match-details.mjs">tests/match-details.mjs</a><p>Browser model, URL allowlist, identity, iframe policy, and reminder timing tests.</p></div>
+        <div class="file" data-kind="evidence"><b>Evidence</b><a href="portrait-identity-audit.json">portrait-identity-audit.json</a><p>25-page discrepancy and frameability audit.</p></div>
+        <div class="file" data-kind="evidence"><b>Evidence</b><a href="browser-audit.json">browser-audit.json</a><p>Network, viewport, one-iframe, expansion, and cleanup measurements.</p></div>
+      </div>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="safety" hidden>
+      <div class="section-head">
+        <h2>Why it does not break or leak</h2>
+        <p>The feature assumes remote data and browser events can fail. Each boundary has an explicit response.</p>
+      </div>
+      <div class="card" style="overflow-x: auto">
+        <table class="rule-table">
+          <thead><tr><th>Risk</th><th>Protection</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Wrong portrait</td><td>Team pair, score, date, stage, slug, and reviewed ID evidence must agree.</td><td class="pass">Fail closed</td></tr>
+            <tr><td>Swiss code mismatch</td><td>Explicit reviewed <code>swi-col</code>. Never derive a slug from local <code>SUI</code>.</td><td class="pass">Covered</td></tr>
+            <tr><td>Penalty score inflation</td><td>Recover the level match score and keep the shootout note separately.</td><td class="pass">4 cases covered</td></tr>
+            <tr><td>External request on load</td><td>No iframe exists until a 500 ms fine-pointer hover or explicit open action.</td><td class="pass">0 requests</td></tr>
+            <tr><td>Keyboard privacy</td><td>Focus shows local facts only. It never starts the portrait request.</td><td class="pass">0 requests</td></tr>
+            <tr><td>Duplicate portrait loads</td><td>One iframe object moves with state-preserving DOM movement.</td><td class="pass">0 move reloads</td></tr>
+            <tr><td>Broken small iframe</td><td>Below 560 by 500, show a direct link instead of a damaged embed.</td><td class="pass">520 fallback</td></tr>
+            <tr><td>Optional data outage</td><td>Scores and picks render even when detail resources fail.</td><td class="pass">Degraded mode</td></tr>
+            <tr><td>My picks data leak</td><td>Facts and portraits exist only inside the Actual path tree.</td><td class="pass">Isolated</td></tr>
+            <tr><td>Remote policy change</td><td>Direct link remains. Production rechecks headers and needs written approval.</td><td class="warn">Gate remains</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid-2" style="margin-top: 14px">
+        <article class="card eli5">
+          <span class="label">ELI5</span>
+          <h3>The four-key safe</h3>
+          <p>
+            A portrait opens only when four keys fit: teams, score, date, and round.
+            A similar-looking match with the wrong key stays locked.
+          </p>
+        </article>
+        <article class="card eli5">
+          <span class="label">ELI5</span>
+          <h3>One television, three sizes</h3>
+          <p>
+            The hover card, match dialog, and full visual do not create three televisions.
+            They move and resize one television, so the video does not restart or count twice.
+          </p>
+        </article>
+      </div>
+      <div class="gate">
+        <h3>Permission and data boundaries</h3>
+        <p>
+          Portrait production use and remote-manifest automation remain blocked until Alexander Bogachev
+          gives written approval. FotMob remains blocked until official access and data-use authorization exist.
+          Odds, bookmaker links, and betting recommendations remain excluded.
+        </p>
+      </div>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="evidence" hidden>
+      <div class="section-head">
+        <h2>Evidence, not guesses</h2>
+        <p>These checks ran against the local served application and frozen data.</p>
+      </div>
+      <div class="grid-3">
+        <article class="card"><h3>Renderer</h3><p><span class="pass">Pass.</span> 31 cards, 30 feeder edges, both layouts, both views, frozen output unchanged.</p></article>
+        <article class="card"><h3>Core behavior</h3><p><span class="pass">Pass.</span> Scoring checks 3,001 brackets. Builder, share, parse, and topology pass.</p></article>
+        <article class="card"><h3>FIFA details</h3><p><span class="pass">Pass.</span> Python fixtures, schema validation, deterministic records, 25/25 coverage.</p></article>
+        <article class="card"><h3>Facts browser audit</h3><p><span class="pass">Pass.</span> Mouse, country hover, focus, Escape, dialog, My picks, mobile, degraded load.</p></article>
+        <article class="card"><h3>Portrait browser audit</h3><p><span class="pass">Pass.</span> 720, 996, and 1376 pixel viewports, no referrer, one iframe, zero move reloads.</p></article>
+        <article class="card"><h3>Workflow</h3><p><span class="pass">Pass.</span> YAML parses and generated details plus coverage validation share one sync boundary.</p></article>
+      </div>
+
+      <div class="section-head" style="margin-top: 28px">
+        <h2>Visual review gallery</h2>
+        <p>Select any image to inspect it at full size.</p>
+      </div>
+      <div class="gallery">
+        <button class="shot" data-image="toast-first-use-1440-dark.png" data-title="First-use Bracket Table toast"><img src="toast-first-use-1440-dark.png" alt=""><span>First-use toast</span></button>
+        <button class="shot" data-image="toast-reminder-1440-dark.png" data-title="One-time delayed reminder"><img src="toast-reminder-1440-dark.png" alt=""><span>Delayed reminder</span></button>
+        <button class="shot" data-image="portrait-hover-M97-1440-dark.png" data-title="Compact M97 facts and portrait"><img src="portrait-hover-M97-1440-dark.png" alt=""><span>Hover card</span></button>
+        <button class="shot" data-image="match-details-M97-1440-dark.png" data-title="Full match details with separate portrait control"><img src="match-details-M97-1440-dark.png" alt=""><span>Match details</span></button>
+        <button class="shot" data-image="portrait-expanded-M97-1440-dark.png" data-title="Expanded FRA-MOR portrait"><img src="portrait-expanded-M97-1440-dark.png" alt=""><span>Expanded portrait</span></button>
+        <button class="shot" data-image="portrait-fallback-M97-520-dark.png" data-title="Narrow direct-link fallback"><img src="portrait-fallback-M97-520-dark.png" alt=""><span>Narrow fallback</span></button>
+        <button class="shot" data-image="portrait-credit-socials-1440-dark.png" data-title="Portrait and social credits"><img src="portrait-credit-socials-1440-dark.png" alt=""><span>Credit links</span></button>
+      </div>
+
+      <div class="actions">
+        <a class="action" href="browser-audit.json">Open browser audit JSON</a>
+        <a class="action" href="portrait-identity-audit.json">Open identity audit JSON</a>
+      </div>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="learning" hidden>
+      <div class="section-head">
+        <h2>Learning moments to reuse</h2>
+        <p>These ideas apply well beyond a World Cup bracket.</p>
+      </div>
+      <div class="grid-3">
+        <article class="card lesson"><h3>1. Contract before component</h3><p><strong>Lesson:</strong> Decide the data shape and failure rules before drawing the UI. This keeps parsing, rendering, and tests aligned.</p></article>
+        <article class="card lesson"><h3>2. Stable IDs beat names</h3><p><strong>Lesson:</strong> Names and three-letter codes vary. Preserve source IDs, then verify names as evidence instead of treating labels as identity.</p></article>
+        <article class="card lesson"><h3>3. Fail closed at joins</h3><p><strong>Lesson:</strong> External data should disappear on uncertainty. A missing portrait is better than a confident wrong portrait.</p></article>
+        <article class="card lesson"><h3>4. Intent before cost</h3><p><strong>Lesson:</strong> Delay external work until user intent is clear. This improves privacy, performance, and accidental analytics counts.</p></article>
+        <article class="card lesson"><h3>5. One object, many presentations</h3><p><strong>Lesson:</strong> Reuse one iframe and resize it. Preserving state prevents duplicate requests and restarts.</p></article>
+        <article class="card lesson"><h3>6. Parent and child mean different things</h3><p><strong>Lesson:</strong> Match hover belongs to the outer shell. Country hover belongs to the row. Event delegation should respect that meaning.</p></article>
+        <article class="card lesson"><h3>7. Optional means optional</h3><p><strong>Lesson:</strong> Scores and picks must survive a detail-file outage. Optional features should never become hidden hard dependencies.</p></article>
+        <article class="card lesson"><h3>8. Freeze moving inputs</h3><p><strong>Lesson:</strong> A live feed is a moving target. Frozen fixtures make parser tests repeatable and make regressions explainable.</p></article>
+        <article class="card lesson"><h3>9. Permission is architecture</h3><p><strong>Lesson:</strong> Legal and author approval gates belong in the design. They affect automation, deployment, attribution, and fallback behavior.</p></article>
+      </div>
+      <div class="card eli5" style="margin-top: 14px">
+        <span class="label">The shortest summary</span>
+        <h3>Trust local facts. Verify external identity. Load only on intent. Clean up every time.</h3>
+        <p>Those four rules explain most of Brief 2.</p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="lightbox" aria-labelledby="light-title">
+    <div class="light-head">
+      <strong id="light-title">Screenshot</strong>
+      <button class="light-close" type="button" aria-label="Close screenshot">X</button>
+    </div>
+    <img id="light-image" alt="">
+  </dialog>
+
+  <footer class="shell">
+    Local Brief 2 review artifact. Generated July 10, 2026. No production deployment was performed.
+  </footer>
+
+  <script>
+    const tabs = [...document.querySelectorAll("[data-tab]")];
+    const panels = [...document.querySelectorAll("[data-panel]")];
+    function showPanel(name) {
+      tabs.forEach(tab => tab.setAttribute("aria-selected", tab.dataset.tab === name ? "true" : "false"));
+      panels.forEach(panel => { panel.hidden = panel.dataset.panel !== name; });
+      history.replaceState(null, "", "#" + name);
+      window.scrollTo({ top: document.querySelector(".tabs-wrap").offsetTop, behavior: "auto" });
+    }
+    tabs.forEach(tab => tab.addEventListener("click", () => showPanel(tab.dataset.tab)));
+    const initial = location.hash.slice(1);
+    if (tabs.some(tab => tab.dataset.tab === initial)) showPanel(initial);
+
+    const flowCopy = {
+      fifa: ["FIFA feed", "The official source provides match identity and facts. The browser never calls FIFA directly."],
+      parser: ["Pure parser", "Small deterministic functions translate FIFA event types, periods, rosters, officials, venues, and score quirks into one local shape."],
+      merge: ["Merge and validate", "Fresh complete facts replace older records. Partial failures keep useful cached facts. Conflicts become explicit validation errors."],
+      json: ["Local JSON", "The output is sorted and serialized deterministically, so two identical sync runs produce identical bytes."],
+      ui: ["Browser UI", "The browser reads optional same-origin JSON, renders with textContent, and creates an external iframe only after clear intent."]
+    };
+    const explain = document.getElementById("flow-explain");
+    document.querySelectorAll("[data-flow]").forEach(node => node.addEventListener("click", () => {
+      document.querySelectorAll("[data-flow]").forEach(item => item.classList.toggle("active", item === node));
+      const copy = flowCopy[node.dataset.flow];
+      explain.replaceChildren();
+      const strong = document.createElement("strong");
+      strong.textContent = copy[0] + ": ";
+      explain.append(strong, document.createTextNode(copy[1]));
+    }));
+
+    document.querySelectorAll("[data-filter]").forEach(button => button.addEventListener("click", () => {
+      document.querySelectorAll("[data-filter]").forEach(item => item.classList.toggle("active", item === button));
+      document.querySelectorAll(".file").forEach(file => {
+        file.hidden = button.dataset.filter !== "all" && file.dataset.kind !== button.dataset.filter;
+      });
+    }));
+
+    const lightbox = document.getElementById("lightbox");
+    const lightImage = document.getElementById("light-image");
+    const lightTitle = document.getElementById("light-title");
+    document.querySelectorAll(".shot").forEach(button => button.addEventListener("click", () => {
+      lightTitle.textContent = button.dataset.title;
+      lightImage.src = button.dataset.image;
+      lightImage.alt = button.dataset.title;
+      lightbox.showModal();
+    }));
+    document.querySelector(".light-close").addEventListener("click", () => lightbox.close());
+    lightbox.addEventListener("click", event => {
+      if (event.target === lightbox) lightbox.close();
+    });
+  </script>
+</body>
+</html>

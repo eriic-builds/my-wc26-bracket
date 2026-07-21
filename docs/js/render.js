@@ -3,6 +3,9 @@
 // bracket + live results + the fixed topology, it returns the dashboard HTML string.
 // Kept faithful to the Python so the golden test (tests/) can prove parity.
 
+import { deriveBracketTree } from "./bracket-tree.js";
+import { flagImg, teamCode3 } from "./flags.js";
+
 const DASH = "\u2013";
 
 export function esc(s) {
@@ -276,7 +279,13 @@ export function computeState(picks, live, topology) {
 const seedOf = (D, t) => D.SEED[t] || "";
 
 // ── bracket ───────────────────────────────────────────────────────────────────
-function r32_cell(D, team, picked, decided, real_winner, freebie) {
+function matchWhen(D, node) {
+  if (node.round === "r32") return D.R32.find(([code]) => code === node.code)?.[1] || "";
+  if (has(D.KO_FIX, node.code)) return D.KO_FIX[node.code][0] || "";
+  if (node.round === "r16") return D.R16_FIX.find(([code]) => code === node.code)?.[1] || D.KO_DATES.r16 || "";
+  return D.KO_DATES[node.round] || "";
+}
+function r32_cell(D, team, picked, decided, real_winner, freebie, score) {
   const cls = ["team"]; let badge = "";
   if (decided) {
     if (picked && real_winner) { cls.push("adv"); badge = '<span class="rb ok">\u2713</span>'; }
@@ -287,80 +296,331 @@ function r32_cell(D, team, picked, decided, real_winner, freebie) {
   const sd = seedOf(D, team), sh = sd ? `<span class="seed">${esc(sd)}</span>` : "";
   const ftag = freebie ? '<span class="tt" title="Freebie \u2014 Canada 1\u20130 South Africa, auto-credited">\u{1F381}</span>' : "";
   return `<div class="${cls.join(" ")}" data-team="${esc(team)}" data-round="r32" tabindex="0">` +
-    `<span class="fav-bar"></span>${sh}<span class="tname">${esc(team)}</span>${ftag}${badge}</div>`;
+    `<span class="fav-bar"></span>${flagImg(team, "mflag")}${sh}<span class="tname">${esc(team)}</span>` +
+    `<span class="tcode" aria-hidden="true">${esc(teamCode3(team))}</span>` +
+    `${score == null ? "" : `<span class="tscore">${esc(score)}</span>`}${ftag}${badge}</div>`;
 }
-function pickBox(D, team, picked, short, champ, st) {
+const MAP_ROUND_LABEL = { r32: "Round of 32", r16: "Round of 16", qf: "Quarterfinals", sf: "Semifinals", final: "Final" };
+const ARIA_ROUND_LABEL = { r32: "Round of 32", r16: "Round of 16", qf: "Quarterfinal", sf: "Semifinal", final: "Final" };
+
+function placeholderRow(node, feeder) {
+  const number = feeder.slice(1);
+  return `<div class="team placeholder" data-feeder="${esc(feeder)}" data-round="${node.round}" aria-label="Winner of match ${esc(number)}">` +
+    `<span class="tname">Winner ${esc(feeder)}</span></div>`;
+}
+
+function pickedFeederWinner(D, tree, feeder) {
+  if (tree.byCode[feeder].round === "r32") return D.R32.find(([code]) => code === feeder)?.[4] || "";
+  return D.PICK_BY_CODE[feeder] || "";
+}
+
+function pickBox(D, team, picked, short, champ, st, feeder = null, score = null) {
   const cls = ["team", "st-" + st];
   if (champ) cls.push("champ");
   if (picked && !champ) cls.push("advancer");
-  const gone = (st === "won" && D.out_at_round(team, short));
+  const gone = st === "won" && D.out_at_round(team, short);
   if (gone) cls.push("gone");
-  const badge = st === "won" ? (gone ? "" : '<span class="rb ok">\u2713</span>') : (st === "lost" ? '<span class="rb no">\u2715</span>' : "");
+  const badge = st === "won"
+    ? (gone ? "" : '<span class="rb ok">\u2713</span>')
+    : (st === "lost" ? '<span class="rb no">\u2715</span>' : "");
   const tag = champ ? '<span class="tt">\u{1F3C6}</span>' : "";
-  const chev = (picked && !champ) ? '<span class="adv-arrow" title="you have this team advancing">\u203A</span>' : "";
+  const chev = picked && !champ ? '<span class="adv-arrow" title="you have this team advancing">\u203A</span>' : "";
   const sd = seedOf(D, team), sh = sd ? `<span class="seed">${esc(sd)}</span>` : "";
-  return `<div class="${cls.join(" ")}" data-team="${esc(team)}" data-round="${short}" tabindex="0">` +
-    `<span class="fav-bar"></span>${sh}<span class="tname">${esc(team)}</span>${tag}${badge}${chev}</div>`;
+  const feederAttr = feeder ? ` data-feeder="${esc(feeder)}"` : "";
+  return `<div class="${cls.join(" ")}" data-team="${esc(team)}"${feederAttr} data-round="${short}" tabindex="0">` +
+    `<span class="fav-bar"></span>${flagImg(team, "mflag")}${sh}<span class="tname">${esc(team)}</span>` +
+    `<span class="tcode" aria-hidden="true">${esc(teamCode3(team))}</span>` +
+    `${score == null ? "" : `<span class="tscore">${esc(score)}</span>`}${tag}${badge}${chev}</div>`;
 }
-function laterCell(D, team, picked, short, champ = false, actual = null, mode = "actual") {
-  if (mode === "picked") return pickBox(D, team, picked, short, champ, D.reach_status(team, short));
-  const st = D.reach_status(team, short);
-  if (st !== "won" && D.ELIM.has(team)) {
+
+function actualReplacementRow(D, team, pickedTeam, node, feeder, score) {
+  const gone = D.ELIM.has(team);
+  const cls = "team st-actual" + (gone ? " gone" : "");
+  const round = ARIA_ROUND_LABEL[node.round] || "this round";
+  const tip = gone
+    ? `${team} advanced in your ${pickedTeam} pick's place, but is now out`
+    : `actually advanced to the ${round} \u2014 you picked ${pickedTeam}`;
+  const sd = seedOf(D, team), sh = sd ? `<span class="seed">${esc(sd)}</span>` : "";
+  return `<div class="${cls}" data-team="${esc(team)}" data-feeder="${esc(feeder)}" data-round="${node.round}" tabindex="0">` +
+    `<span class="fav-bar"></span>${flagImg(team, "mflag")}${sh}<span class="tname">${esc(team)}</span>` +
+    `<span class="tcode" aria-hidden="true">${esc(teamCode3(team))}</span>` +
+    `${score == null ? "" : `<span class="tscore">${esc(score)}</span>`}` +
+    `<span class="rb up" title="${esc(tip)}">\u25B2</span></div>`;
+}
+
+function renderKoRow(D, tree, node, mode, feeder, feederIndex) {
+  const pickedTeam = pickedFeederWinner(D, tree, feeder);
+  const actualTeam = has(D.RES, feeder) ? D.RES[feeder][2] : null;
+  const team = mode === "actual" ? actualTeam : pickedTeam;
+  if (!team) return placeholderRow(node, feeder);
+
+  const decided = has(D.RES, node.code);
+  const isActualParticipant = team === actualTeam;
+  const score = decided && isActualParticipant ? D.RES[node.code][feederIndex] : null;
+  if (mode === "actual" && actualTeam !== pickedTeam) {
+    return actualReplacementRow(D, actualTeam, pickedTeam, node, feeder, score);
+  }
+
+  const winner = decided ? D.RES[node.code][2] : null;
+  const status = decided && isActualParticipant
+    ? (team === winner ? "won" : "lost")
+    : D.reach_status(team, node.round);
+  return pickBox(D, team, D.PICK_BY_CODE[node.code] === team, node.round, false, status, feeder, score);
+}
+
+function renderMatchCard(D, tree, node, mode) {
+  const decided = has(D.RES, node.code);
+  let home, away, pick, rows;
+
+  if (node.round === "r32") {
+    const [, , a, b, picked] = D.R32.find(([code]) => code === node.code);
+    home = a; away = b; pick = picked;
+    const [gA, gB, winner] = decided ? D.RES[node.code] : [null, null, null];
+    const freebie = node.code === D.FREEBIE_MATCH;
+    rows = r32_cell(D, a, picked === a, decided, winner === a, freebie && picked === a, gA) +
+      r32_cell(D, b, picked === b, decided, winner === b, freebie && picked === b, gB);
+  } else {
+    const actualTeams = node.feeders.map((feeder) => has(D.RES, feeder) ? D.RES[feeder][2] : null);
+    const pickedTeams = node.feeders.map((feeder) => pickedFeederWinner(D, tree, feeder));
+    [home, away] = mode === "actual" ? actualTeams : pickedTeams;
+    pick = D.PICK_BY_CODE[node.code];
+    rows = node.feeders.map((feeder, index) => renderKoRow(D, tree, node, mode, feeder, index)).join("");
+  }
+
+  const when = matchWhen(D, node);
+  const [gA, gB, winner, note] = decided ? D.RES[node.code] : [null, null, null, ""];
+  const homeLabel = home || `winner of ${node.feeders?.[0] || ""}`;
+  const awayLabel = away || `winner of ${node.feeders?.[1] || ""}`;
+  const label = decided
+    ? `${node.code}, ${ARIA_ROUND_LABEL[node.round]}: ${homeLabel} ${gA}, ${awayLabel} ${gB}. ${winner} advance.`
+    : `${node.code}, ${ARIA_ROUND_LABEL[node.round]}: ${homeLabel} vs ${awayLabel}, ${when}`;
+  const status = D.pick_status(node.round, pick, node.code);
+  const actualAttrs = mode === "actual" && decided
+    ? ` data-played="true" data-home="${esc(home)}" data-away="${esc(away)}" tabindex="0"`
+    : "";
+
+  return `<div class="mcard st-${status}" data-match-code="${esc(node.code)}" data-round="${node.round}" data-side="${node.side}"${actualAttrs} aria-label="${esc(label)}">` +
+    `<div class="mhead"><span class="mcode">${esc(node.code)}</span><span class="mwhen">${esc(when)}</span>` +
+    `${note ? `<span class="mnote">${esc(note)}</span>` : ""}</div>${rows}</div>`;
+}
+
+function renderCenterStage(D, tree, mode) {
+  return `<div class="center-stage"><div class="trophy-slot" data-trophy></div>` +
+    `<div class="champ-state">` +
+    `${pickBox(D, D.CHAMP, true, "champion", true, D.reach_status(D.CHAMP, "champion"))}` +
+    `<div class="champ-note">${esc(D.CHAMP_NOTE)}</div></div>` +
+    `<div class="bkhead">Final \u00b7 ${esc(D.KO_DATES.final || "")}</div>` +
+    `${renderMatchCard(D, tree, tree.byCode.M104, mode)}</div>`;
+}
+
+function renderMiniOverview(tree, D, mode) {
+  const points = {};
+  for (const node of tree.nodes) {
+    const count = tree.columns[node.col - 1].codes.length;
+    points[node.code] = {
+      x: 8 + (node.col - 1) * 43,
+      y: (node.slot + 0.5) / count * 200,
+    };
+  }
+
+  const edges = tree.edges.map((edge) => {
+    const fromNode = tree.byCode[edge.from], from = points[edge.from], to = points[edge.to];
+    const movingLeft = fromNode.col > tree.byCode[edge.to].col;
+    const startX = from.x + (movingLeft ? -1.5 : 1.5);
+    const endX = to.x + (movingLeft ? 1.5 : -1.5);
+    const middleX = (startX + endX) / 2;
+    return `<path class="mm-edge" d="M${startX} ${from.y} H${middleX} V${to.y} H${endX}"></path>`;
+  });
+  const nodes = tree.nodes.map((node) => {
+    const point = points[node.code];
+    const pick = node.round === "r32"
+      ? D.R32.find(([code]) => code === node.code)?.[4]
+      : D.PICK_BY_CODE[node.code];
+    const status = D.pick_status(node.round, pick, node.code);
+    return `<rect class="mm-node mm-${status}" x="${point.x - 1.5}" y="${point.y - 4.5}" width="3" height="9"></rect>`;
+  });
+
+  return `<svg class="mini-map" data-view="${mode}" aria-hidden="true" viewBox="0 0 360 200" role="presentation">` +
+    edges.join("") + nodes.join("") + "</svg>";
+}
+
+export function buildBracket(D, mode = "actual") {
+  const tree = deriveBracketTree({ ko_feed: D.KO_FEED });
+  const columns = tree.columns.map((column) => {
+    const center = column.side === "C";
+    const cards = center
+      ? renderCenterStage(D, tree, mode)
+      : `<div class="bkhead">${MAP_ROUND_LABEL[column.round]}</div>` +
+        column.codes.map((code) => renderMatchCard(D, tree, tree.byCode[code], mode)).join("");
+    return `<div class="bkcol${center ? " bkcenter" : ""}" data-col="${column.col}" data-side="${column.side}" data-round="${column.round}">${cards}</div>`;
+  });
+  return `<div class="bracket layout-mirror mode-${mode}"><svg class="bksvg" aria-hidden="true"></svg>${renderMiniOverview(tree, D, mode)}<div class="bkgrid">${columns.join("")}</div></div>`;
+}
+
+function legacyR32Cell(D, team, picked, decided, realWinner, freebie) {
+  const classes = ["team"];
+  let badge = "";
+  if (decided) {
+    if (picked && realWinner) {
+      classes.push("adv");
+      badge = '<span class="rb ok">\u2713</span>';
+    } else if (picked && !realWinner) {
+      classes.push("busted");
+      badge = '<span class="rb no">\u2715</span>';
+    } else if (!picked && realWinner) {
+      classes.push("realadv");
+      badge = '<span class="rb up">\u25B2</span>';
+    } else {
+      classes.push("out");
+    }
+  } else {
+    classes.push(picked ? "adv" : "out");
+  }
+  const freebieTag = freebie
+    ? '<span class="tt" title="Freebie \u2014 Canada 1\u20130 South Africa, auto-credited">\u{1F381}</span>'
+    : "";
+  return `<div class="${classes.join(" ")}" data-team="${esc(team)}" data-round="r32" tabindex="0">` +
+    `<span class="fav-bar"></span>${flagImg(team, "mflag")}<span class="tname">${esc(team)}</span>${freebieTag}${badge}</div>`;
+}
+
+function legacyPickBox(D, team, picked, round, champion, status) {
+  const classes = ["team", "st-" + status];
+  if (champion) classes.push("champ");
+  if (picked && !champion) classes.push("advancer");
+  const gone = status === "won" && D.out_at_round(team, round);
+  if (gone) classes.push("gone");
+  const badge = status === "won"
+    ? (gone ? "" : '<span class="rb ok">\u2713</span>')
+    : (status === "lost" ? '<span class="rb no">\u2715</span>' : "");
+  const trophy = champion ? '<span class="tt">\u{1F3C6}</span>' : "";
+  const chevron = picked && !champion
+    ? '<span class="adv-arrow" title="you have this team advancing">\u203A</span>'
+    : "";
+  return `<div class="${classes.join(" ")}" data-team="${esc(team)}" data-round="${round}" tabindex="0">` +
+    `<span class="fav-bar"></span>${flagImg(team, "mflag")}<span class="tname">${esc(team)}</span>${trophy}${badge}${chevron}</div>`;
+}
+
+function legacyLaterCell(D, team, picked, round, champion = false, actual = null, mode = "actual") {
+  if (mode === "picked") {
+    return legacyPickBox(D, team, picked, round, champion, D.reach_status(team, round));
+  }
+  const status = D.reach_status(team, round);
+  if (status !== "won" && D.ELIM.has(team)) {
     if (actual) {
-      const sd = seedOf(D, actual), sh = sd ? `<span class="seed">${esc(sd)}</span>` : "";
       const gone = D.ELIM.has(actual);
-      const cls = "team st-actual" + (gone ? " gone" : "");
-      const rnd = { r16: "Round of 16", qf: "Quarterfinal", sf: "Semifinal", final: "Final" }[short] || "this round";
-      let tip;
-      if (actual === team) tip = `${actual} reached the ${rnd}` + (gone ? ", but is now out" : "");
-      else if (gone) tip = `${actual} advanced in your ${team} pick's place, but is now out`;
-      else tip = `actually advanced \u2014 you picked ${team}`;
-      return `<div class="${cls}" data-team="${esc(actual)}" data-round="${short}" tabindex="0">` +
-        `<span class="fav-bar"></span>${sh}<span class="tname">${esc(actual)}</span>` +
-        `<span class="rb up" title="${esc(tip)}">\u25B2</span></div>`;
+      const classes = "team st-actual" + (gone ? " gone" : "");
+      const label = { r16: "Round of 16", qf: "Quarterfinal", sf: "Semifinal", final: "Final" }[round] || "this round";
+      let title;
+      if (actual === team) title = `${actual} reached the ${label}` + (gone ? ", but is now out" : "");
+      else if (gone) title = `${actual} advanced in your ${team} pick's place, but is now out`;
+      else title = `actually advanced \u2014 you picked ${team}`;
+      return `<div class="${classes}" data-team="${esc(actual)}" data-round="${round}" tabindex="0">` +
+        `<span class="fav-bar"></span>${flagImg(actual, "mflag")}<span class="tname">${esc(actual)}</span>` +
+        `<span class="rb up" title="${esc(title)}">\u25B2</span></div>`;
     }
     return '<div class="team blank"><span class="tname">&nbsp;</span></div>';
   }
-  return pickBox(D, team, picked, short, champ, st);
+  return legacyPickBox(D, team, picked, round, champion, status);
 }
-export function buildBracket(D, mode = "actual") {
-  const cols = [];
-  const cells = [];
-  for (const [mc, dt, a, b, pk] of D.R32) {
-    const dec = has(D.RES, mc), rw = dec ? D.RES[mc][2] : null;
-    let cap;
-    if (dec) {
-      const [gA, gB, w, note] = D.RES[mc];
-      cap = `<div class="mscore">${esc(a)} ${gA}${DASH}${gB} ${esc(b)}${note ? " \u00b7 " + note : ""}</div>`;
-    } else cap = `<div class="mscore up">kick-off ${esc(dt)}</div>`;
-    const fb = (mc === D.FREEBIE_MATCH);
-    cells.push('<div class="match" data-status="' + D.pick_status("r32", pk, mc) + '"><div class="mlabel">' + esc(mc) + ' \u00b7 ' + esc(dt) + '</div>' + cap +
-      r32_cell(D, a, pk === a, dec, rw === a, fb && pk === a) +
-      r32_cell(D, b, pk === b, dec, rw === b, fb && pk === b) + '</div>');
+
+function sidewaysActualMatchAttrs(D, mode, code, home, away, round) {
+  if (mode !== "actual" || !code || !has(D.RES, code)) return "";
+  let participants = [home, away];
+  const feeders = D.KO_FEED[code];
+  if (feeders && feeders.length === 2) {
+    participants = feeders.map(feeder => has(D.RES, feeder) ? D.RES[feeder][2] : null);
   }
-  cols.push('<div class="round"><div class="rhead">Round of 32<span>' + `${D.R32_DONE} of ${D.N_R32} final` + '</span></div><div class="matches">' + cells.join("") + '</div></div>');
-  const meta = [["Round of 16", "r16", "Jul 4\u20137", D.rounds[1][3]], ["Quarterfinals", "qf", "Jul 9\u201311", D.rounds[2][3]],
-    ["Semifinals", "sf", "Jul 14\u201315", D.rounds[3][3]], ["Final", "final", "Jul 19", D.rounds[4][3]]];
-  const roundCodes = { r16: D._r16codes, qf: D._qfcodes, sf: D._sfcodes, final: D._finalcodes };
-  const r16day = {}; for (const [mc, day] of D.R16_FIX) r16day[mc] = day;
-  for (const [label, short, sub, ms] of meta) {
-    const cc = [];
-    const codes = roundCodes[short] || [];
-    ms.forEach(([a, b, w], j) => {
-      const isf = (label === "Final");
-      const aa = D.actual_advancer(short, a), ab = D.actual_advancer(short, b);
-      const code = j < codes.length ? codes[j] : "";
-      const when = r16day[code] || "";
-      const lab = code ? (esc(code) + (when ? " \u00b7 " + esc(when) : "")) : "";
-      const mlab = lab ? `<div class="mlabel up">${lab}</div>` : "";
-      cc.push('<div class="match">' + mlab + laterCell(D, a, w === a, short, isf && w === a, aa, mode) + laterCell(D, b, w === b, short, isf && w === b, ab, mode) + '</div>');
+  if (!participants[0] || !participants[1]) return "";
+  const [homeGoals, awayGoals, winner, note] = D.RES[code];
+  const roundLabel = ARIA_ROUND_LABEL[round] || "Knockout";
+  const label = `${code}, ${roundLabel}: ${participants[0]} ${homeGoals}, ${participants[1]} ${awayGoals}. ${winner} advance.${note ? " " + note + "." : ""}`;
+  return ` data-match-code="${esc(code)}" data-played="true" data-home="${esc(participants[0])}" data-away="${esc(participants[1])}" tabindex="0" aria-label="${esc(label)}"`;
+}
+
+export function buildSidewaysBracket(D, mode = "actual") {
+  const columns = [];
+  const r32Matches = [];
+  for (const [code, date, home, away, pick] of D.R32) {
+    const decided = has(D.RES, code);
+    const realWinner = decided ? D.RES[code][2] : null;
+    let score;
+    if (decided) {
+      const [homeGoals, awayGoals, , note] = D.RES[code];
+      score = `<div class="mscore">${esc(home)} ${homeGoals}${DASH}${awayGoals} ${esc(away)}${note ? " \u00b7 " + note : ""}</div>`;
+    } else {
+      score = `<div class="mscore up">kick-off ${esc(date)}</div>`;
+    }
+    const freebie = code === D.FREEBIE_MATCH;
+    const matchAttrs = sidewaysActualMatchAttrs(D, mode, code, home, away, "r32");
+    r32Matches.push(
+      `<div class="match" data-status="${D.pick_status("r32", pick, code)}"${matchAttrs}>` +
+      `<div class="mlabel">${esc(code)} \u00b7 ${esc(date)}</div>${score}` +
+      legacyR32Cell(D, home, pick === home, decided, realWinner === home, freebie && pick === home) +
+      legacyR32Cell(D, away, pick === away, decided, realWinner === away, freebie && pick === away) +
+      "</div>",
+    );
+  }
+  columns.push(
+    `<div class="round"><div class="rhead">Round of 32<span>${D.R32_DONE} of ${D.N_R32} final</span></div>` +
+    `<div class="matches">${r32Matches.join("")}</div></div>`,
+  );
+
+  const metadata = [
+    ["Round of 16", "r16", "Jul 4\u20137", D.rounds[1][3]],
+    ["Quarterfinals", "qf", "Jul 9\u201311", D.rounds[2][3]],
+    ["Semifinals", "sf", "Jul 14\u201315", D.rounds[3][3]],
+    ["Final", "final", "Jul 19", D.rounds[4][3]],
+  ];
+  const roundCodes = {
+    r16: D._r16codes,
+    qf: D._qfcodes,
+    sf: D._sfcodes,
+    final: D._finalcodes,
+  };
+  const r16Days = {};
+  for (const [code, day] of D.R16_FIX) r16Days[code] = day;
+
+  for (const [label, round, subtitle, matches] of metadata) {
+    const cells = [];
+    const codes = roundCodes[round] || [];
+    matches.forEach(([home, away, winner], index) => {
+      const final = label === "Final";
+      const actualHome = D.actual_advancer(round, home);
+      const actualAway = D.actual_advancer(round, away);
+      const code = index < codes.length ? codes[index] : "";
+      const when = r16Days[code] || "";
+      const matchAttrs = sidewaysActualMatchAttrs(
+        D,
+        mode,
+        code,
+        actualHome,
+        actualAway,
+        round,
+      );
+      const matchLabel = code
+        ? `<div class="mlabel up">${esc(code)}${when ? " \u00b7 " + esc(when) : ""}</div>`
+        : "";
+      cells.push(
+        `<div class="match"${matchAttrs}>${matchLabel}` +
+        legacyLaterCell(D, home, winner === home, round, final && winner === home, actualHome, mode) +
+        legacyLaterCell(D, away, winner === away, round, final && winner === away, actualAway, mode) +
+        "</div>",
+      );
     });
-    cols.push(`<div class="round"><div class="rhead">${esc(label)}<span>${esc(sub)}</span></div><div class="matches">` + cc.join("") + '</div></div>');
+    columns.push(
+      `<div class="round"><div class="rhead">${esc(label)}<span>${esc(subtitle)}</span></div>` +
+      `<div class="matches">${cells.join("")}</div></div>`,
+    );
   }
-  cols.push('<div class="round champcol"><div class="rhead">Champion<span>your pick</span></div><div class="matches">' +
-    '<div class="match">' + laterCell(D, D.CHAMP, true, "champion", true, null, mode) +
-    '<div class="champ-note">' + esc(D.CHAMP_NOTE) + '</div></div></div></div>');
-  return `<div class="bracket mode-${mode}"><svg class="bksvg" aria-hidden="true"></svg>` + cols.join("") + '</div>';
+
+  columns.push(
+    '<div class="round champcol"><div class="rhead">Champion<span>your pick</span></div><div class="matches">' +
+    `<div class="match"><div class="trophy-slot" data-trophy></div>` +
+    `${legacyLaterCell(D, D.CHAMP, true, "champion", true, null, mode)}` +
+    `<div class="champ-note">${esc(D.CHAMP_NOTE)}</div></div></div></div>`,
+  );
+  return `<div class="bracket layout-sideways mode-${mode}"><svg class="bksvg" aria-hidden="true"></svg>` +
+    columns.join("") + "</div>";
 }
 
 // ── scorecard ───────────────────────────────────────────────────────────────
@@ -596,10 +856,10 @@ export function buildLegend() {
   const items = [
     ['<span class="lg-box lg-won">\u2713</span>', "Your pick \u2014 won / through"],
     ['<span class="lg-box lg-lost">\u2715</span>', "Your pick \u2014 out"],
-    ['<span class="lg-line lg-line-won"></span>', "Your path so far (correct)"],
-    ['<span class="lg-line lg-line-pend"></span>', "Your pick \u2014 still to play"],
+    ['<span class="lg-line lg-line-won"></span>', "Correct path \u2014 feeder line into the next game"],
+    ['<span class="lg-line lg-line-pend"></span>', "Still to play \u2014 pending feeder line"],
     ['<span class="lg-box lg-actual">\u25B2</span>', "Who actually advanced (you had the other team)"],
-    ['<span class="lg-line lg-line-actual"></span>', "Actual path"],
+    ['<span class="lg-line lg-line-actual"></span>', "Actual path \u2014 feeder line of the real result"],
     ['<span class="lg-chev">\u203A</span>', "You have this team advancing"],
     ['<span class="lg-box lg-champ">\u{1F3C6}</span>', "Your champion pick"],
   ];
@@ -650,7 +910,7 @@ export function renderDashboard(picks, live, topology) {
     '<a href="#sec-scorecard"><span class="ic">\u{1F9EE}</span> Scorecard</a>' +
     '<a href="#sec-r32"><span class="ic">\u26BD</span> Round-by-round results</a>' +
     '<a href="#sec-news"><span class="ic">\u{1F4F0}</span> Game facts</a>' +
-    '<a href="#sec-bracket"><span class="ic">\u{1F5FA}\uFE0F</span> Bracket map</a>' +
+    '<a href="#sec-bracket"><span class="ic">\u{1F5FA}\uFE0F</span> Bracket Table</a>' +
     '<a href="#sec-finalfour"><span class="ic">\u{1F3C5}</span> Final four</a>' +
     '<a href="#sec-story"><span class="ic">\u2728</span> How it played out</a>' +
     '<a href="#sec-scoring"><span class="ic">\u{1F3AF}</span> Scoring &amp; schedule</a>' +
@@ -690,10 +950,16 @@ export function renderDashboard(picks, live, topology) {
     '</div>' + '</div>' +
     shead("sec-news", "\u{1F4F0}", "Game facts \u2014 recent games", "newest first") +
     `<div class="g3">${buildHighlights(D)}</div>` + '</div>' +
-    shead("sec-bracket", "\u{1F5FA}\uFE0F", "Your bracket, marked up", "\u2713 hit \u00b7 \u2715 miss \u00b7 \u25B2 who went through") +
+    shead("sec-bracket", "\u{1F5FA}\uFE0F", "Bracket Table", "\u2713 hit \u00b7 \u2715 miss \u00b7 \u25B2 who went through") +
     buildLegend() +
-    '<div class="brk-toggle"><button data-view="actual" class="on">Actual path</button><button data-view="picked">My picks</button></div>' +
-    `<div class="glass brk-wrap" data-view="actual">${buildBracket(D, "actual")}${buildBracket(D, "picked")}</div>` + '</div>' +
+    '<div class="brk-controls"><div class="brk-toggle" role="group" aria-label="Bracket Table data view">' +
+    '<button data-view="actual" class="on">Actual path</button><button data-view="picked">My picks</button></div>' +
+    '<button class="map-expand-toggle" id="mapExpandToggle" type="button" aria-expanded="false" aria-controls="bracketMap">Expand table</button>' +
+    '<div class="layout-toggle" role="group" aria-label="Bracket Table layout">' +
+    '<button data-layout="mirror" class="on" aria-pressed="true">Mirrored</button>' +
+    '<button data-layout="sideways" aria-pressed="false">Sideways</button></div></div>' +
+    `<div class="glass brk-wrap" id="bracketMap" data-view="actual" data-layout="mirror">${buildBracket(D, "actual")}${buildBracket(D, "picked")}` +
+    `${buildSidewaysBracket(D, "actual")}${buildSidewaysBracket(D, "picked")}</div>` + '</div>' +
     shead("sec-finalfour", "\u{1F3C5}", "Your final four", `${D.FF_ALIVE}/${D.QF_WIN.length} still alive`) +
     `<div class="ffgrid">${buildFinalfour(D)}</div>` + '</div>' +
     shead("sec-story", "\u2728", "How it played out", "so far") +

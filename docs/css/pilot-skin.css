@@ -1,0 +1,161 @@
+/* ==========================================================================
+   PILOT SKIN — RIVR-inspired reskin, an ADDITIVE layer over dashboard.css.
+   Loaded ONLY by pilot.html; production index.html never sees this file.
+   Everything is scoped under .pilot and driven by dashboard.css --tokens, so
+   all seven themes (dark/light/easy/geocities/minecraft/winxp/doodle) keep
+   working. Techniques ported from the design-lab preview:
+     • framed hero (big soft edges)      • frosted badge + higher-contrast pills
+     • pill button with inner icon chip  • floating glass stat card
+     • faux-cutout corner notch (SVG)    • entrance + scroll-reveal motion
+   ========================================================================== */
+
+/* --- PILOT ribbon (bottom-left; clearly marks this as the uncommitted pilot) */
+.pilot-ribbon{position:fixed;left:14px;bottom:14px;z-index:80;
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.72rem;font-weight:800;letter-spacing:.05em;color:#04121a;
+  background:var(--grad);border-radius:999px;padding:6px 13px;
+  box-shadow:0 6px 18px rgba(0,151,244,.35);pointer-events:none;user-select:none}
+
+/* --- Framed hero (the RIVR "section") ----------------------------------- */
+.pilot .hero{position:relative;overflow:hidden;isolation:isolate;
+  border-radius:clamp(1.4rem,3.4vw,2.6rem);
+  padding:34px 34px 128px;min-height:clamp(460px,66vh,640px);
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  animation:pilot-hero-in .7s cubic-bezier(.2,.7,.2,1) both}
+/* Layered token gradient in place of the design-lab's video background */
+.pilot .hero::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(60% 82% at 12% 4%, var(--g1), transparent 70%),
+    radial-gradient(56% 76% at 92% 0%, var(--g2), transparent 70%),
+    radial-gradient(74% 74% at 64% 128%, var(--g3), transparent 72%),
+    linear-gradient(120deg, color-mix(in srgb,var(--blue) 12%,transparent), color-mix(in srgb,var(--teal) 12%,transparent));
+  filter:saturate(1.05)}
+/* Raise the real flow children above ::before WITHOUT disturbing the absolute accents */
+.pilot .hero > .eyebrow,
+.pilot .hero > h1,
+.pilot .hero > p,
+.pilot .hero > .badges,
+.pilot .hero > .composer{position:relative;z-index:1}
+
+/* frosted eyebrow -> badge pill with a live dot */
+.pilot .hero .eyebrow{display:inline-flex;align-items:center;gap:8px;
+  padding:7px 15px;border-radius:999px;text-transform:none;letter-spacing:.05em;
+  background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid var(--border2);color:var(--text2);font-size:.74rem;font-weight:700}
+.pilot .hero .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.8s infinite;flex:0 0 auto}
+
+.pilot .hero h1{font-size:clamp(2.2rem,5.6vw,4.2rem);line-height:1.05;margin:.3em 0 .28em;max-width:18ch}
+.pilot .hero p.sub{margin:0 auto;max-width:60ch}
+.pilot .hero .badges{justify-content:center;margin-top:16px}
+/* bump badge contrast so pills don't wash out over the gradient (design-lab note) */
+.pilot .hero .badges .pill{background:color-mix(in srgb,var(--panel) 92%,transparent);
+  border-color:var(--border2);box-shadow:var(--shadow)}
+.pilot .hero .composer{width:100%;max-width:640px;margin:22px auto 0}
+
+/* --- Reusable pill button with an inner circular icon chip -------------- */
+.pilot .pill-chip{display:inline-flex;align-items:center;gap:9px;font:inherit;font-weight:700;
+  font-size:.84rem;cursor:pointer;border:1px solid transparent;border-radius:999px;
+  padding:5px 16px 5px 5px;color:#04121a;background:var(--grad);
+  box-shadow:0 6px 16px rgba(0,151,244,.28);transition:transform .15s,box-shadow .15s}
+.pilot .pill-chip:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(0,151,244,.36)}
+.pilot .pill-chip:active{transform:translateY(0)}
+.pilot .pill-chip .chip-ic{display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.30);font-size:.9rem;line-height:1}
+.pilot .pill-chip.ghost{background:var(--panel);color:var(--text);border-color:var(--border2);box-shadow:var(--shadow)}
+.pilot .pill-chip.ghost .chip-ic{background:var(--hover)}
+
+/* --- Injected floating glass stat card ---------------------------------- */
+.pilot-statcard{position:absolute;left:26px;bottom:24px;z-index:2;
+  display:flex;flex-direction:column;gap:12px;padding:16px 18px;
+  border-radius:clamp(1rem,2.4vw,1.7rem);min-width:172px;width:fit-content;
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border2);box-shadow:var(--shadow);
+  animation:pilot-slide-left .8s ease-out .2s both}
+.pilot-statcard .ps-num{font-size:clamp(1.7rem,3.6vw,2.4rem);font-weight:800;letter-spacing:-.02em;color:var(--text);line-height:1}
+.pilot-statcard .ps-lbl{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+
+/* --- Injected faux-cutout corner (SVG masks filled with the page colour) - */
+.pilot-corner{--pc-r:clamp(1.4rem,2.8vw,2.6rem);position:absolute;right:0;bottom:0;z-index:2;
+  display:flex;align-items:center;gap:14px;padding:16px 22px 16px 30px;
+  background:var(--bg);border-top-left-radius:var(--pc-r);cursor:pointer;
+  animation:pilot-fade-up .8s ease-out .35s both}
+.pilot-corner .pc-mask{position:absolute;width:var(--pc-r);height:var(--pc-r);pointer-events:none;line-height:0}
+.pilot-corner .pc-mask.top{top:calc(-1 * var(--pc-r));right:0}
+.pilot-corner .pc-mask.left{bottom:0;left:calc(-1 * var(--pc-r))}
+.pilot-corner .pc-mask svg{width:100%;height:100%;display:block}
+.pilot-corner .pc-mask path{fill:var(--bg)}
+.pilot-corner .pc-ic{flex:0 0 auto;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--hover);border:1px solid var(--border2);font-size:1.15rem}
+.pilot-corner .pc-txt{display:flex;flex-direction:column;gap:1px;text-align:left}
+.pilot-corner .pc-title{font-size:clamp(.98rem,1.8vw,1.18rem);font-weight:700;color:var(--text);white-space:nowrap}
+.pilot-corner .pc-link{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;font-weight:600;color:var(--muted);transition:color .15s}
+.pilot-corner:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+.pilot-corner:hover .pc-link{color:var(--text)}
+
+@media(max-width:720px){
+  .pilot .hero{padding-bottom:116px}
+  .pilot-statcard{left:14px;bottom:14px;padding:12px 14px;min-width:0}
+  .pilot-corner{padding:12px 16px 12px 24px;gap:10px}
+  .pilot-corner .pc-ic{width:40px;height:40px}
+}
+@media(max-width:520px){
+  .pilot-statcard{display:none}   /* avoid colliding with the corner on tiny screens */
+}
+
+/* --- Landing as the framed RIVR hero (pilot only) ----------------------- */
+/* Higher specificity (.pilot #landing …) so these win over index.html's inline styles */
+.pilot #landing{max-width:1080px;padding:14px 16px 72px}
+.pilot .pilot-hero-frame{position:relative;overflow:hidden;isolation:isolate;
+  border-radius:clamp(1.4rem,3.4vw,2.6rem);border:1px solid var(--border2);
+  background:var(--glass);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  box-shadow:var(--shadow);padding:0 0 40px;margin:0 auto 26px;
+  animation:pilot-hero-in .7s cubic-bezier(.2,.7,.2,1) both}
+.pilot .pilot-hero-bg{position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(60% 82% at 12% 4%, var(--g1), transparent 70%),
+    radial-gradient(56% 76% at 92% 0%, var(--g2), transparent 70%),
+    radial-gradient(74% 74% at 64% 128%, var(--g3), transparent 72%),
+    linear-gradient(120deg, color-mix(in srgb,var(--blue) 12%,transparent), color-mix(in srgb,var(--teal) 12%,transparent));
+  filter:saturate(1.05)}
+.pilot .pilot-hero-frame > *{position:relative;z-index:1}
+
+/* nav: home button (brand) + theme switcher */
+.pilot .pilot-lnav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px}
+.pilot .pilot-home{display:inline-flex;align-items:center;gap:11px;background:transparent;border:0;cursor:pointer;
+  font:inherit;color:var(--text);padding:6px 10px;border-radius:12px;transition:background .15s,transform .15s}
+.pilot .pilot-home:hover{background:var(--hover);transform:translateY(-1px)}
+.pilot .pilot-home .orb{width:30px;height:30px;border-radius:50%;background:var(--grad);box-shadow:0 0 16px rgba(0,151,244,.5);flex:0 0 auto}
+.pilot .pilot-home-tx{font-weight:800;text-align:left;line-height:1.05}
+.pilot .pilot-home-tx small{display:block;color:var(--muted);font-weight:500;font-size:.72rem;letter-spacing:.04em}
+.pilot .pilot-modes{flex:0 0 auto}
+
+/* hero body */
+.pilot .pilot-hero-body{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;
+  padding:16px 24px 8px;min-height:clamp(300px,40vh,440px)}
+.pilot .pilot-hero-body .kicker{margin-bottom:8px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.pilot .pilot-hero-body h1{font-size:clamp(2.1rem,5.4vw,3.9rem);line-height:1.06;margin:.22em 0 .32em;max-width:20ch}
+.pilot .pilot-hero-body .tag{max-width:56ch;margin-left:auto;margin-right:auto}
+.pilot .pilot-hero-body .choices{margin-top:22px;justify-content:center}
+.pilot .pilot-hero-body .choice.primary{min-width:min(420px,92vw);box-shadow:var(--shadow);border-radius:20px}
+.pilot .pilot-hero-body #drop{margin:14px auto 0;max-width:420px;border-radius:18px}
+
+/* secondary (below-frame) content: keep the softer radii */
+.pilot #landing .choices.alt .choice{border-radius:20px}
+.pilot #landing .step{border-radius:16px}
+
+/* --- Scroll-reveal: opacity-first so it never shifts bracket connectors --- */
+.pilot .shead.reveal{opacity:0;transform:translateY(16px)}
+.pilot .shead.reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+.pilot .sec-body.reveal{opacity:0}
+.pilot .sec-body.reveal.in{opacity:1;transition:opacity .6s ease}
+
+/* --- Keyframes (replace motion/react) ----------------------------------- */
+@keyframes pilot-hero-in{from{opacity:0;transform:scale(.986)}to{opacity:1;transform:none}}
+@keyframes pilot-fade-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pilot-slide-left{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+
+@media(prefers-reduced-motion:reduce){
+  .pilot .hero,.pilot-statcard,.pilot-corner{animation:none!important}
+  .pilot .shead.reveal,.pilot .sec-body.reveal{opacity:1!important;transform:none!important}
+}

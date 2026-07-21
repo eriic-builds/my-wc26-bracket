@@ -1,0 +1,50 @@
+{
+  "initialRequests": "same-origin only",
+  "focusRequests": 0,
+  "shortHoverRequests": 0,
+  "longHoverDocumentRequests": 1,
+  "minPreviewWidth": 526,
+  "iframePolicy": {
+    "referrerPolicy": "no-referrer",
+    "sandbox": "allow-scripts allow-same-origin"
+  },
+  "expansion": {
+    "iframeCount": 1,
+    "sameFrame": true,
+    "frameWidth": 1376,
+    "dialogWidth": 1420,
+    "ariaExpanded": "true",
+    "ariaLabel": "Collapse data portrait",
+    "hasArrow": true
+  },
+  "viewport": {
+    "preview": {
+      "href": "https://wc26.bogachev.fr/m/fra-mor/",
+      "innerWidth": 720,
+      "innerHeight": 405,
+      "bodyWidth": 720
+    },
+    "expanded": {
+      "innerWidth": 1376,
+      "innerHeight": 758,
+      "bodyWidth": 1376
+    }
+  },
+  "remoteIdentity": "FRA-MOR hydrated before capture",
+  "matchDetailsExpansion": {
+    "portraitExpanded": false,
+    "iframeCount": 1,
+    "sameFrame": true,
+    "frameWidth": 996,
+    "dialogWidth": 1040,
+    "portraitLabel": "Expand data portrait",
+    "hasPortraitArrow": true
+  },
+  "iframeMoveDocumentRequests": 0,
+  "toast": "first-use, dismiss, remember, and reopen passed",
+  "cleanup": "hover, dialog, touch, rapid transition, and view switch passed",
+  "sideways": "passed",
+  "narrowFallback": "passed",
+  "disclosure": "passed",
+  "localConsoleErrors": []
+}

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="eli5">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The 12 Plans, Explained</title>
+<style>
+:root{
+  --bg:#141317; --panel:#1c1b21; --panel2:#232229; --text:#f4f7ee; --muted:#9aa2ad;
+  --border:rgba(255,255,255,.10); --border2:rgba(255,255,255,.18);
+  --gold:#FFCE20; --teal:#00B291; --blue:#0097F4; --red:#E5484D; --purple:#CB85FF;
+  --grad:linear-gradient(120deg,#0097F4,#00B291);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:28px 20px 120px}
+h1{font-size:clamp(1.7rem,4.5vw,2.6rem);line-height:1.1;margin:.2em 0}
+h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:1.25rem;margin:2.2em 0 .6em;display:flex;align-items:center;gap:10px}
+h2 .num{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--grad);color:#04121a;font-size:.85rem;font-weight:800;flex:0 0 auto}
+p{color:var(--text)}
+.sub{color:var(--muted);max-width:70ch}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--border2);color:var(--muted)}
+.pill.b1{border-color:rgba(0,178,145,.5);color:#4fd8bf}
+.pill.b2{border-color:rgba(0,151,244,.5);color:#61bdf7}
+.pill.gate{border-color:rgba(255,206,32,.6);color:var(--gold)}
+
+/* top bar */
+.topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;background:rgba(20,19,23,.92);backdrop-filter:blur(8px);padding:12px 0;border-bottom:1px solid var(--border)}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
+.nav a{color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:600;padding:6px 11px;border-radius:999px;border:1px solid transparent}
+.nav a:hover{color:var(--text);border-color:var(--border2)}
+.switch{display:flex;align-items:center;gap:9px;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;user-select:none}
+.sw{width:46px;height:24px;border-radius:999px;background:var(--panel2);border:1px solid var(--border2);position:relative;transition:.2s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.2s}
+html[data-mode="eli5"] .sw{background:var(--teal);border-color:var(--teal)}
+html[data-mode="eli5"] .sw::after{left:24px;background:#fff}
+.modehint b{color:var(--text)}
+
+/* pipeline */
+.pipe{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:14px}
+.stage{flex:1 1 240px;padding:16px 18px;border:1px solid var(--border);background:var(--panel);position:relative}
+.stage:first-child{border-radius:var(--radius) 0 0 var(--radius)}
+.stage:last-child{border-radius:0 var(--radius) var(--radius) 0}
+.stage h3{margin:0 0 6px;font-size:1rem}
+.stage p{margin:0;font-size:.86rem;color:var(--muted)}
+.stage.gatebox{background:rgba(255,206,32,.07);border-color:rgba(255,206,32,.45)}
+.stage.gatebox h3{color:var(--gold)}
+
+/* graph */
+#graphwrap{position:relative;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);padding:18px;overflow-x:auto}
+#graph{position:relative;min-width:900px;height:330px}
+#arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.node{position:absolute;width:150px;padding:9px 11px;border-radius:12px;border:1px solid var(--border2);background:var(--panel2);cursor:pointer;transition:.18s;font-size:.78rem;line-height:1.35}
+.node b{display:block;font-size:.82rem}
+.node small{color:var(--muted)}
+.node.b1{border-left:3px solid var(--teal)}
+.node.b2{border-left:3px solid var(--blue)}
+.node.gate{border-color:var(--gold);border-left:3px solid var(--gold);text-align:center;color:var(--gold);font-weight:800;width:120px}
+.node:hover{transform:translateY(-2px);border-color:var(--border2);background:#2a2931}
+.node.sel{outline:2px solid var(--gold)}
+.node.lit{background:rgba(0,178,145,.18);border-color:var(--teal)}
+.node.dep{background:rgba(0,151,244,.16);border-color:var(--blue)}
+.node.dim{opacity:.32}
+.gcap{margin-top:10px;font-size:.82rem;color:var(--muted);min-height:1.4em}
+.gcap b{color:var(--text)}
+.gbtns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button.btn{font:inherit;font-size:.82rem;font-weight:700;color:var(--text);background:var(--panel2);border:1px solid var(--border2);border-radius:10px;padding:7px 14px;cursor:pointer}
+button.btn:hover{background:#2c2b33}
+button.btn.go{background:var(--grad);color:#04121a;border-color:transparent}
+path.edge{stroke:rgba(255,255,255,.22);stroke-width:1.6;fill:none}
+path.edge.lit{stroke:var(--teal);stroke-width:2.4}
+path.edge.dep{stroke:var(--blue);stroke-width:2.4}
+
+/* plan cards */
+.plan{border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);margin-bottom:12px;overflow:hidden}
+.plan-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+.plan-head:hover{background:var(--panel2)}
+.rank{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;font-weight:800;flex:0 0 auto;color:#04121a}
+.plan.b1 .rank{background:var(--teal)}
+.plan.b2 .rank{background:var(--blue)}
+.plan-head h3{margin:0;font-size:1rem;flex:1}
+.plan-head .file{font-size:.7rem;color:var(--muted);font-family:ui-monospace,Consolas,monospace}
+.car{color:var(--muted);transition:transform .18s}
+.plan.open .car{transform:rotate(180deg)}
+.plan-body{display:none;padding:2px 18px 18px;border-top:1px solid var(--border)}
+.plan.open .plan-body{display:block}
+.row{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:.92rem}
+.row:last-child{border-bottom:0}
+.row .k{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.row.eli5 .k{color:var(--gold)}
+.row.lesson .k{color:#4fd8bf}
+.row .v{color:var(--text)}
+.row .v code{font-family:ui-monospace,Consolas,monospace;font-size:.82em;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:1px 6px}
+html[data-mode="eng"] .row.eli5{display:none}
+html[data-mode="eli5"] .row.what .v .eng{display:none}
+html[data-mode="eng"] .row.what .v .simple{display:none}
+.deps{font-size:.78rem;color:var(--muted)}
+.deps b{color:var(--text)}
+
+/* decisions */
+.dec{border:1px solid var(--border);border-radius:12px;background:var(--panel);margin-bottom:10px;overflow:hidden}
+.dec summary{padding:13px 16px;cursor:pointer;font-weight:700;font-size:.95rem;list-style:none;display:flex;gap:10px;align-items:center}
+.dec summary::before{content:"+";color:var(--gold);font-weight:800;width:16px}
+.dec[open] summary::before{content:"–"}
+.dec summary:hover{background:var(--panel2)}
+.dec .inner{padding:0 16px 16px;font-size:.9rem}
+.dec .inner .tag{font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.dec .inner p{margin:.5em 0}
+.foot{margin-top:50px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--border);padding-top:16px}
+@media(max-width:640px){.row{grid-template-columns:1fr}.row .k{padding-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topbar">
+  <div class="nav">
+    <a href="#big">Big picture</a>
+    <a href="#graph-sec">Order map</a>
+    <a href="#b1">Brief 1 plans</a>
+    <a href="#b2">Brief 2 plans</a>
+    <a href="#lessons">Decisions</a>
+  </div>
+  <label class="switch" id="modeSwitch">
+    <span class="modehint">Explain it simply: <b id="modeLabel">ON</b></span>
+    <span class="sw"></span>
+  </label>
+</div>
+
+<h1>Your bracket rebuild, <span class="g">in 12 plans</span></h1>
+<p class="sub">You asked for a map rebuild (Brief 1) and a match-facts layer (Brief 2).
+I read both briefs, the live code, and the production repo, then wrote 12 step-by-step
+plans a smaller coding model executes without asking questions. This page shows what
+each plan does, why it sits where it sits, and the lesson behind each choice.
+Flip the switch above to move between plain-language and engineer wording.</p>
+
+<h2 id="big"><span class="num">1</span>The big picture</h2>
+<div class="pipe">
+  <div class="stage"><span class="pill b1">Brief 1</span><h3>Build the mirrored map</h3>
+  <p>Six plans turn the flat bracket into a tournament tree: 31 game cards, two halves, one center Final, 30 connector lines, a spinning cup.</p></div>
+  <div class="stage gatebox"><span class="pill gate">Gate</span><h3>You approve the map</h3>
+  <p>Everything stops. I serve the site, take screenshots, and wait for your yes. No approval, no Brief 2.</p></div>
+  <div class="stage"><span class="pill b2">Brief 2</span><h3>Add match facts and portraits</h3>
+  <p>Six plans add FIFA facts on hover, a full match dialog, and permission-gated external art. Then a second hard stop.</p></div>
+</div>
+<p class="sub" style="margin-top:14px">One rule sits above all of it: nothing gets committed,
+pushed, or deployed, and the production repo stays read-only. You review everything first.</p>
+
+<h2 id="graph-sec"><span class="num">2</span>The order map</h2>
+<div id="graphwrap">
+  <div id="graph">
+    <svg id="arrows"></svg>
+  </div>
+  <div class="gcap" id="gcap">Click a plan to see what it waits for (green) and what waits for it (blue).</div>
+  <div class="gbtns">
+    <button class="btn go" id="playBtn">Play the build order</button>
+    <button class="btn" id="clearBtn">Clear</button>
+  </div>
+</div>
+
+<h2 id="b1"><span class="num">3</span>Brief 1: the mirrored map (six plans)</h2>
+<div id="b1list"></div>
+
+<h2 id="b2"><span class="num">4</span>Brief 2: match facts and portraits (six plans, gated)</h2>
+<p class="sub">These wait for your map approval. Same structure, new surface: data contracts first, then the pipeline, then the screen.</p>
+<div id="b2list"></div>
+
+<h2 id="lessons"><span class="num">5</span>Decisions and traps worth learning from</h2>
+<div id="declist"></div>
+
+<div class="foot">Generated as a companion to <code>plans/README.md</code>. The full detail
+lives in the 12 plan files under <code>plans/brief-1-mirrored-bracket-map/</code> and
+<code>plans/brief-2-match-data-and-portraits/</code>.</div>
+</div>
+
+<script>
+const PLANS = [
+ {id:"b1-1", brief:"b1", rank:1, name:"Bracket tree model", file:"PLAN-bracket-tree-model.md", deps:[],
+  simple:"One small file reads the tournament wiring (which game feeds which) and outputs a clean tree: 31 games, 30 connections, left half, right half, center Final. Plus a test proving every piece.",
+  eng:"New pure module docs/js/bracket-tree.js: deriveBracketTree(topology) walks ko_feed by DFS from M104 and returns nodes, edges, and nine columns with slots. tests/bracket-tree.mjs locks branch order, counts, and error cases. Zero DOM, zero picks data.",
+  why:"Every later plan reads this exact shape. Build the skeleton once, test it once, and the renderer and the connector lines never disagree about the bracket.",
+  eli5:"Before building a LEGO castle, sort the bricks and print one instruction sheet. Everyone builds from the same sheet, so the walls always meet.",
+  lesson:"Separate the shape of your data from how it looks. A pure function with no screen code is cheap to test and impossible to break by restyling."},
+
+ {id:"b1-2", brief:"b1", rank:2, name:"Mirrored match cards", file:"PLAN-mirrored-match-cards.md", deps:["b1-1"],
+  simple:"Replace 62 loose team rows with 31 game cards. Each card holds both countries, flags, the score or kickoff date, the match code, and a label a screen reader speaks in full.",
+  eng:"Rewrite buildBracket() around the tree. Cards emit data-match-code, data-feeder per row, and (Actual view, decided games only) data-played, data-home, data-away, tabindex. Team rows keep the legacy .team classes so search, favorites, and hover survive untouched. A frozen results fixture plus tests/matchcards.mjs pin the output.",
+  why:"This plan defines the contract everything hooks into: the connector lines, the responsive tiers, and later the whole Brief 2 facts layer. Contracts must land before the work built on top of them.",
+  eli5:"Swap 62 sticky notes for 31 trading cards. A card shows the whole game at a glance, and every card has a name tag other tools grab onto.",
+  lesson:"When you rewrite the front, keep the old class names alive. Three existing features (search, favorites, hover) kept working here without a single edit."},
+
+ {id:"b1-3", brief:"b1", rank:3, name:"Responsive, no sideways scroll", file:"PLAN-responsive-no-scroll.md", deps:["b1-1","b1-2"],
+  simple:"All nine columns fit every screen with no sideways scrolling. As space shrinks, gaps go first, then extra text, then full names become flags plus 3-letter codes. Phones get a tiny full-tree overview plus a readable card list.",
+  eng:"container-type:inline-size on .brk-wrap, fluid minmax(0,1fr) tracks, density tiers via container queries, no transform:scale, no hidden scrollbars. flags.js gains FIFA trigrams. renderMiniOverview() draws an aria-hidden 31-node SVG strip for the phone tier. A console snippet audits scrollWidth at eight widths.",
+  why:"The overflow rule is the most likely review failure, and the connector plan measures card positions. Fit the layout first so the lines measure final boxes, not boxes about to shrink.",
+  eli5:"Shrink the poster to fit the wall before you draw arrows on it. Draw first and the arrows point at empty space.",
+  lesson:"Container queries respond to the box an element lives in. Media queries respond to the window. The sidebar steals 186px here, so the box is the truth."},
+
+ {id:"b1-4", brief:"b1", rank:4, name:"Feeder connector lines", file:"PLAN-feeder-connectors.md", deps:["b1-1","b1-2","b1-3"],
+  simple:"Draw all 30 elbow lines from each game into the next. Left half flows right, right half flows left, both semifinals meet the center Final. Lines redraw after fonts load, resizes, theme switches, section expands, and view toggles.",
+  eng:"drawConnectors() reads edges straight from the DOM (each data-feeder row declares one edge), draws into the visible bracket's own SVG, and colors lines from the parent row's status classes. New triggers: document.fonts.ready and the section-expand toggle, plus a zero-size guard.",
+  why:"Old code matched repeated team names across columns, which breaks the moment two views or placeholders exist. Explicit edges also fix a live bug: collapse the bracket section, resize, expand, and today's lines land in the wrong spots.",
+  eli5:"Connect the dots with a ruler, and only after the dots stop moving. If someone bumps the table, redraw.",
+  lesson:"Hidden elements measure 0 by 0. Measure only what the user sees, and list every event able to move things, then redraw after each one."},
+
+ {id:"b1-5", brief:"b1", rank:5, name:"Center sculpture", file:"PLAN-center-sculpture.md", deps:["b1-2"],
+  simple:"A small original spinning cup above the Final. It loads late, pauses when off screen, obeys reduced-motion settings, takes keyboard input, and falls back to a flat image if 3D fails. It decorates, it never informs.",
+  eng:"Pinned local three@0.170.0, original geometry in trophy.js (faceted globe, V supports, hex plinth, dashboard tokens), orthographic camera, 36s rotation, drag with pointer capture, IntersectionObserver plus visibilitychange pauses, full teardown across re-renders, SVG fallback on WebGL failure and at phone width.",
+  why:"Nothing depends on it, so it runs in parallel with plans 3 and 4. It is deliberately distinct from the official trophy for rights reasons, and the Final card stays readable with the 3D off.",
+  eli5:"A toy trophy on the shelf. If the toy breaks, the scoreboard still works. Every motor you start needs an off switch.",
+  lesson:"Progressive enhancement: the page works with the fancy part deleted. And in a page re-rendering itself, every animation, observer, and GPU context needs a teardown path."},
+
+ {id:"b1-6", brief:"b1", rank:6, name:"Map validation and review", file:"PLAN-map-validation-review.md", deps:["b1-1","b1-2","b1-3","b1-4","b1-5"],
+  simple:"The final walkthrough. A snapshot test freezes the new map's output, a 16-point checklist runs at eight screen widths, screenshots get captured, and then everything stops for your approval.",
+  eng:"tests/map-frozen.mjs locks buildBracket output against frozen inputs with an explicit --update path. Console audits assert 31 cards, 30 lines, unique codes, and scrollWidth limits. Screenshot packet saved outside the deployed docs/ tree. Hard stop.",
+  why:"Each earlier plan verified itself. Integration bugs live between plans, so one pass verifies the combination, and the brief demands a human gate before Brief 2.",
+  eli5:"Walk through the house before the open house. Take photos, get a yes in writing, then start the next room.",
+  lesson:"Freeze your test inputs. The live results file changes three times a day, so any test pinned to it rots by dinner. Snapshots compare against a copy you chose."},
+
+ {id:"b2-1", brief:"b2", rank:1, name:"Data contract and fixtures", file:"PLAN-match-details-contract-and-fixtures.md", deps:["gate"],
+  simple:"Agree on the exact shape of the match-facts file before writing any code around it. Save one real FIFA response to disk and test the parser against the saved copy forever.",
+  eng:"Frozen calendar and per-match FIFA payloads under tests/fixtures/fifa/. Pure parse and merge helpers in scripts/match_details.py, a focused validator, and python tests. M97 (France 2-0 Morocco) is the canonical case. Nulls get omitted, never rendered.",
+  why:"Five other plans read or write this file. Freeze the contract first and the pipeline, browser, and validator work proceeds in parallel without stepping on each other.",
+  eli5:"Decide the shape of the box before the factory ships boxes. Everyone packs and unpacks the same way.",
+  lesson:"Test against saved copies of real API responses. Your tests then run offline, fast, and identical every time. The word for this is hermetic."},
+
+ {id:"b2-2", brief:"b2", rank:2, name:"FIFA details sync pipeline", file:"PLAN-fifa-details-sync-pipeline.md", deps:["b2-1"],
+  simple:"The robot already fetching scores three times a day now also writes a facts file. A guard checks the file before anything ships. A single broken game becomes a partial record with a warning, never a broken site.",
+  eng:"fetch_results.py preserves FIFA source IDs through bracket matching. update_details() fetches per-match payloads only for missing, partial, or changed records, writes deterministic JSON, and the workflow runs the validator between fetch and commit. FotMob stays a blocked branch: no authorization, no code.",
+  why:"Real generated data lets the browser plans render truth instead of mocks, and the validator gate means a malformed feed never reaches the published site.",
+  eli5:"The mailman now also delivers a fact sheet, and a guard at the door reads every sheet before it goes on the fridge.",
+  lesson:"Validate generated data before publishing it, and fail loudly with the exact name of the broken field. Silent failure is the expensive kind."},
+
+ {id:"b2-3", brief:"b2", rank:3, name:"Fact card interaction", file:"PLAN-fact-card-interaction.md", deps:["b2-1"],
+  simple:"Hover or keyboard-focus a finished game and a small facts card appears: scorers, cards, stadium, attendance, referee. Missing facts vanish instead of showing blanks. If the facts file fails to load, one clear notice appears and the bracket keeps working.",
+  eng:"Optional same-origin loads with explicit ok/error state objects, initMatchDetails(root, detailsState, portraitState) with AbortController teardown, delegation scoped to the Actual view, 150ms hover intent, textContent-only rendering, and team-history hover suppressed inside completed cards.",
+  why:"This is the surface the dialog and portrait plans extend. Scoping it to Actual-view completed cards is what keeps My picks clean, a hard rule in the brief.",
+  eli5:"Tap a trading card and a stats sheet pops up. Lose the stats sheets and the cards still play fine.",
+  lesson:"Optional resources should fail soft and visible: one honest notice, feature off, everything else alive. Never turn a failed load into a fake empty success."},
+
+ {id:"b2-4", brief:"b2", rank:4, name:"Full match dialog", file:"PLAN-full-match-dialog.md", deps:["b2-1","b2-3"],
+  simple:"Click, Enter, Space, or tap opens a proper popup with the complete facts. Escape closes it and your keyboard focus returns exactly where it was.",
+  eng:"One native dialog element following the app's existing share-dialog pattern. Activation filters out team-row focus, dedupes touch-then-click, guards showModal support, and caps height with internal vertical scroll only.",
+  why:"Hover excludes keyboards and phones. The dialog is the equal-access path, and the portrait plan loads its iframe into it.",
+  eli5:"The stats sheet gets a big-book version anyone opens with a tap or a key press, and the book always closes back to your page.",
+  lesson:"Every hover feature needs a click-and-keyboard twin. Focus return after closing a dialog is the detail separating polished from annoying."},
+
+ {id:"b2-5", brief:"b2", rank:5, name:"Portrait shell", file:"PLAN-portrait-shell.md", deps:["b2-1","b2-3","b2-4"],
+  simple:"For 25 verified games, outside artwork loads in a framed window, and only after you clearly want it: a half-second deliberate hover, or a direct click. Leave early and no request ever fires. A visible note credits the artist and a direct link always exists.",
+  eng:"Reviewed 25-slug mapping validated against ID, date, stage, teams, and score. Fine-pointer 500ms intent timer, at most one iframe ever, no-referrer, strict host plus slug allowlist, removal on leave, close, or view switch to free GPU memory. Production enablement stays blocked on the author's written permission.",
+  why:"Third-party content is the highest-scrutiny surface: privacy, permission, and cleanup all live here. It runs last so it lands on stable fact and dialog layers.",
+  eli5:"A window into someone else's art gallery. The window opens only when you knock on purpose, closes behind you, and the gallery owner gets asked before the public visits.",
+  lesson:"Privacy by default: zero third-party requests until clear intent, nothing about you in the URL, and fail closed when any detail mismatches."},
+
+ {id:"b2-6", brief:"b2", rank:6, name:"Combined validation and review", file:"PLAN-combined-validation-review.md", deps:["b2-1","b2-2","b2-3","b2-4","b2-5"],
+  simple:"The final sweep of both briefs together: every test, a 20-point checklist with the network tab open, screenshots, a written summary, and a full stop for your approval.",
+  eng:"All JS and Python suites plus validators, privacy audit in a fresh profile, map regression re-checked at all widths, repo hygiene verified in both repos, FotMob blocked status stated. Hard stop before any production planning.",
+  why:"Momentum is how unapproved things ship. A named gate at the end makes stopping the default instead of the exception.",
+  eli5:"One last inspection of the whole house, camera in hand, and the keys stay in your pocket until you say go.",
+  lesson:"End every project phase with a checklist a stranger runs and a stop condition written down. If a check fails, fix it in the plan owning it, then re-run the whole gate."}
+];
+
+const DECISIONS = [
+ {t:"Geometry comes from the wiring file, never from your picks",
+  tag:"Correctness",
+  body:"The old code laid out rounds using the order inside the uploaded picks file. A shared link or an odd upload reorders it, and the map bends. The tree now derives only from topology.ko_feed, the file describing which game feeds which. Lesson: layout belongs to fixed structure, user data belongs in the slots."},
+ {t:"The hidden-scrollbar trick was the exact banned pattern",
+  tag:"Honest UI",
+  body:"Today the bracket scrolls sideways with the scrollbar hidden, so it looks fine and pans anyway. The brief bans it, and plan 3 deletes those rules and replaces them with columns shrinking for real. Lesson: hiding a symptom (the scrollbar) is not fixing the cause (content too wide)."},
+ {t:"Hidden things measure as zero",
+  tag:"Browser mechanics",
+  body:"Only one bracket view is visible, the other sits at display:none. Ask the browser for the hidden one's positions and you get zeros, so lines drawn from them collapse. The connector code only ever measures the visible view, waits 60ms after a toggle so paint finishes, and skips drawing when width is zero. Lesson: measure after paint, and only measure the visible."},
+ {t:"Twelve small plans beat one big plan",
+  tag:"Working with AI executors",
+  body:"Four plans need render.js or dashboard.css. Without ownership rules, two executors edit the same lines and produce conflicting work. Each plan names which symbols it owns, what contract it leaves, and what later plans consume. Lesson: for multi-step delegated work, divide files by owner and write the interfaces down."},
+ {t:"Tests pinned to live data rot within hours",
+  tag:"Testing",
+  body:"A robot rewrites results.json up to three times a day, and the current golden test also expects a file in /tmp from a Python script. Neither is a usable gate. New tests copy today's results into tests/fixtures and compare against the copy, with an explicit --update step for intentional changes. Lesson: a test should only fail when your code changes, not when the world does."},
+ {t:"Keep old class names during a rewrite",
+  tag:"Refactoring",
+  body:"Search, favorites, and the team hover card all find teams through .team[data-team]. The new cards keep those exact hooks, so three features survived a full visual rewrite with zero edits. Lesson: the cheapest migration is the one where existing consumers notice nothing."},
+ {t:"External content earns its way in",
+  tag:"Privacy and rights",
+  body:"The portrait feature makes zero third-party requests on load, on focus, and on quick hovers. A request fires only after 500ms of deliberate fine-pointer hover or an explicit click, through one iframe, with no referrer and nothing about you in the URL. The sculpture is original geometry, distinct from the official trophy, and the artist's written permission gates production. Lesson: default to zero leakage, and treat other people's work as permission-first."},
+ {t:"Decoration must never block information",
+  tag:"Resilience",
+  body:"The 3D cup lazy-loads, pauses off screen, respects reduced motion, and swaps to a flat image when WebGL fails or the file is blocked. The Final card reads fine either way. Lesson: build the page to work with the fancy layer deleted, then add the fancy layer."}
+];
+
+// ---- render plan cards ----
+function planCard(p){
+  const briefTag = p.brief === "b1" ? '<span class="pill b1">Brief 1</span>' : '<span class="pill b2">Brief 2</span>';
+  const depNames = p.deps.map(d => d === "gate" ? "your map approval" : ("#" + PLANS.find(x=>x.id===d).rank + " " + PLANS.find(x=>x.id===d).name)).join(", ") || "nothing, it goes first";
+  return `<div class="plan ${p.brief}" id="card-${p.id}">
+    <div class="plan-head" data-toggle="${p.id}">
+      <span class="rank">${p.rank}</span>
+      <h3>${p.name} ${briefTag}</h3>
+      <span class="file">${p.file}</span>
+      <span class="car">▾</span>
+    </div>
+    <div class="plan-body">
+      <div class="row what"><div class="k">What</div><div class="v"><span class="simple">${p.simple}</span><span class="eng">${p.eng}</span></div></div>
+      <div class="row"><div class="k">Why here</div><div class="v">${p.why}</div></div>
+      <div class="row eli5"><div class="k">Like I'm 5</div><div class="v">${p.eli5}</div></div>
+      <div class="row lesson"><div class="k">Lesson</div><div class="v">${p.lesson}</div></div>
+      <div class="row"><div class="k">Waits for</div><div class="v deps"><b>${depNames}</b></div></div>
+    </div>
+  </div>`;
+}
+document.getElementById("b1list").innerHTML = PLANS.filter(p=>p.brief==="b1").map(planCard).join("");
+document.getElementById("b2list").innerHTML = PLANS.filter(p=>p.brief==="b2").map(planCard).join("");
+
+document.querySelectorAll(".plan-head").forEach(h => h.addEventListener("click", () => {
+  h.parentElement.classList.toggle("open");
+}));
+
+// ---- decisions ----
+document.getElementById("declist").innerHTML = DECISIONS.map(d =>
+  `<details class="dec"><summary>${d.t}</summary><div class="inner"><span class="tag">${d.tag}</span><p>${d.body}</p></div></details>`
+).join("");
+
+// ---- graph ----
+const POS = {
+  "b1-1":[10,40],  "b1-2":[190,40], "b1-3":[370,40], "b1-4":[550,40],
+  "b1-5":[370,150],"b1-6":[550,150],
+  "gate":[740,95],
+  "b2-1":[10,240], "b2-2":[190,185],"b2-3":[190,295],"b2-4":[370,295],
+  "b2-5":[550,295],"b2-6":[730,240]
+};
+const graph = document.getElementById("graph");
+const NODE_INFO = {};
+PLANS.forEach(p => NODE_INFO[p.id] = p);
+
+function mkNode(id, html, cls){
+  const el = document.createElement("div");
+  el.className = "node " + cls;
+  el.id = "n-" + id;
+  el.style.left = POS[id][0] + "px";
+  el.style.top = POS[id][1] + "px";
+  el.innerHTML = html;
+  el.addEventListener("click", () => selectNode(id));
+  graph.appendChild(el);
+}
+PLANS.forEach(p => mkNode(p.id, `<b>${p.brief==="b1"?"B1":"B2"}.${p.rank} ${p.name}</b><small>${p.brief==="b1"?"map":"facts"}</small>`, p.brief));
+mkNode("gate", "YOUR<br>APPROVAL", "gate");
+
+// edges: deps plus gate wiring
+const EDGES = [];
+PLANS.forEach(p => p.deps.forEach(d => EDGES.push([d, p.id])));
+EDGES.push(["b1-6","gate"]);
+
+function center(id){
+  const el = document.getElementById("n-"+id);
+  return [el.offsetLeft + el.offsetWidth/2, el.offsetTop + el.offsetHeight/2];
+}
+function drawEdges(){
+  const svg = document.getElementById("arrows");
+  svg.setAttribute("viewBox", "0 0 " + graph.scrollWidth + " " + graph.offsetHeight);
+  svg.innerHTML = "";
+  EDGES.forEach(([a,b],i) => {
+    const [x1,y1] = center(a), [x2,y2] = center(b);
+    const mx = (x1+x2)/2;
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", `M${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+    path.setAttribute("class","edge");
+    path.dataset.from = a; path.dataset.to = b;
+    svg.appendChild(path);
+  });
+}
+drawEdges();
+window.addEventListener("resize", drawEdges);
+
+let selected = null;
+function clearGraph(){
+  document.querySelectorAll(".node").forEach(n => n.classList.remove("sel","lit","dep","dim"));
+  document.querySelectorAll("path.edge").forEach(e => e.classList.remove("lit","dep"));
+  document.getElementById("gcap").innerHTML = "Click a plan to see what it waits for (green) and what waits for it (blue).";
+  selected = null;
+}
+function ancestors(id, acc){
+  EDGES.filter(([a,b]) => b === id).forEach(([a]) => { if(!acc.has(a)){ acc.add(a); ancestors(a, acc); } });
+  return acc;
+}
+function descendants(id, acc){
+  EDGES.filter(([a,b]) => a === id).forEach(([,b]) => { if(!acc.has(b)){ acc.add(b); descendants(b, acc); } });
+  return acc;
+}
+function selectNode(id){
+  if(selected === id){ clearGraph(); return; }
+  clearGraph();
+  selected = id;
+  const up = ancestors(id, new Set());
+  const down = descendants(id, new Set());
+  document.querySelectorAll(".node").forEach(n => {
+    const nid = n.id.slice(2);
+    if(nid === id) n.classList.add("sel");
+    else if(up.has(nid)) n.classList.add("lit");
+    else if(down.has(nid)) n.classList.add("dep");
+    else n.classList.add("dim");
+  });
+  document.querySelectorAll("path.edge").forEach(e => {
+    if(up.has(e.dataset.from) && (e.dataset.to === id || up.has(e.dataset.to))) e.classList.add("lit");
+    if((e.dataset.from === id || down.has(e.dataset.from)) && down.has(e.dataset.to)) e.classList.add("dep");
+  });
+  const info = NODE_INFO[id];
+  const cap = document.getElementById("gcap");
+  if(info){
+    cap.innerHTML = `<b>${info.name}</b>. ${info.why}`;
+    const card = document.getElementById("card-" + id);
+    if(card) card.classList.add("open");
+  } else {
+    cap.innerHTML = "<b>The gate.</b> Brief 1 ends with a served preview and screenshots. You say yes before any Brief 2 work starts.";
+  }
+}
+
+// ---- play the build order ----
+const ORDER = ["b1-1","b1-2","b1-3","b1-4","b1-5","b1-6","gate","b2-1","b2-2","b2-3","b2-4","b2-5","b2-6"];
+const CAPTIONS = {
+ "b1-1":"Step 1: derive and test the tree. Pure data, no visuals.",
+ "b1-2":"Step 2: render 31 cards from the tree. The DOM contract is born.",
+ "b1-3":"Step 3: make nine columns fit every screen. No sideways scroll.",
+ "b1-4":"Step 4: draw 30 lines on the now-final card positions.",
+ "b1-5":"Step 5 (parallel with 3 and 4): the sculpture, safely optional.",
+ "b1-6":"Step 6: freeze, test everything, screenshot, and stop.",
+ "gate":"You review the map. Yes means Brief 2 starts. No means it never does.",
+ "b2-1":"Step 7: freeze the data contract and real FIFA fixtures.",
+ "b2-2":"Step 8: the sync robot writes and validates the facts file.",
+ "b2-3":"Step 9: hover and focus show the compact fact card.",
+ "b2-4":"Step 10: the full dialog gives keyboard and touch the same access.",
+ "b2-5":"Step 11: permission-gated portraits, privacy first.",
+ "b2-6":"Step 12: combined review, then the final hard stop."
+};
+let playTimer = null;
+document.getElementById("playBtn").addEventListener("click", () => {
+  clearGraph();
+  if(playTimer){ clearInterval(playTimer); playTimer = null; }
+  let i = 0;
+  playTimer = setInterval(() => {
+    if(i >= ORDER.length){ clearInterval(playTimer); playTimer = null; return; }
+    const id = ORDER[i];
+    document.querySelectorAll(".node").forEach(n => n.classList.remove("sel"));
+    const node = document.getElementById("n-" + id);
+    node.classList.add("lit","sel");
+    document.getElementById("gcap").innerHTML = "<b>" + CAPTIONS[id] + "</b>";
+    i++;
+  }, 1400);
+});
+document.getElementById("clearBtn").addEventListener("click", () => {
+  if(playTimer){ clearInterval(playTimer); playTimer = null; }
+  clearGraph();
+});
+
+// ---- mode switch ----
+const sw = document.getElementById("modeSwitch");
+sw.addEventListener("click", () => {
+  const html = document.documentElement;
+  const next = html.dataset.mode === "eli5" ? "eng" : "eli5";
+  html.dataset.mode = next;
+  document.getElementById("modeLabel").textContent = next === "eli5" ? "ON" : "OFF";
+});
+</script>
+</body>
+</html>

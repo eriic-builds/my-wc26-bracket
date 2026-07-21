@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>my-wc26-bracket — Codebase Analysis & 5-Plan Roadmap</title>
+<style>
+:root{
+  --bg:#0e1116;--panel:#161b23;--panel2:#1c232e;--border:#2a3342;--text:#e6ebf2;
+  --muted:#8b98ab;--blue:#4da3ff;--teal:#2fd6b0;--gold:#f2c14e;--red:#ff6b6b;
+  --purple:#b28dff;--green:#7ed957;
+}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 100px}
+h1{font-size:1.9rem;margin:.2em 0;background:linear-gradient(120deg,var(--blue),var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:1.3rem;margin:1.6em 0 .5em;border-bottom:1px solid var(--border);padding-bottom:.3em}
+h3{font-size:1.05rem;margin:1.2em 0 .4em}
+.sub{color:var(--muted);margin:0 0 18px}
+code{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.86em;color:var(--teal)}
+a{color:var(--blue)}
+/* tabs */
+nav{display:flex;flex-wrap:wrap;gap:8px;position:sticky;top:0;background:linear-gradient(var(--bg) 85%,transparent);padding:14px 0 10px;z-index:5}
+nav button{font:inherit;font-weight:600;font-size:.9rem;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:7px 16px;cursor:pointer;transition:.15s}
+nav button:hover{color:var(--text);border-color:var(--blue)}
+nav button.on{color:#04121a;background:linear-gradient(120deg,var(--blue),var(--teal));border-color:transparent}
+section.tab{display:none;animation:fade .25s}
+section.tab.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* eli5 toggle */
+.eli5toggle{display:flex;align-items:center;gap:10px;margin:10px 0 0;font-size:.9rem;color:var(--muted);user-select:none;cursor:pointer}
+.eli5toggle input{width:38px;height:22px;appearance:none;background:var(--panel2);border:1px solid var(--border);border-radius:999px;position:relative;cursor:pointer;transition:.2s}
+.eli5toggle input:checked{background:var(--gold);border-color:var(--gold)}
+.eli5toggle input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text);transition:.2s}
+.eli5toggle input:checked::after{left:18px;background:#3a2c00}
+.eli5{display:none;background:rgba(242,193,78,.08);border:1px solid rgba(242,193,78,.35);border-left:4px solid var(--gold);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:.92rem}
+body.eli5-on .eli5{display:block}
+.eli5 b{color:var(--gold)}
+/* cards & details */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:12px 0}
+details{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin:10px 0;overflow:hidden}
+details summary{cursor:pointer;padding:12px 16px;font-weight:700;list-style:none;display:flex;align-items:center;gap:10px}
+details summary::before{content:"▸";color:var(--blue);transition:.15s}
+details[open] summary::before{transform:rotate(90deg)}
+details .body{padding:0 16px 14px;border-top:1px solid var(--border)}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:999px;padding:2px 10px;margin-right:6px;vertical-align:middle}
+.p-blue{background:rgba(77,163,255,.15);color:var(--blue);border:1px solid rgba(77,163,255,.4)}
+.p-teal{background:rgba(47,214,176,.13);color:var(--teal);border:1px solid rgba(47,214,176,.4)}
+.p-gold{background:rgba(242,193,78,.13);color:var(--gold);border:1px solid rgba(242,193,78,.4)}
+.p-red{background:rgba(255,107,107,.13);color:var(--red);border:1px solid rgba(255,107,107,.4)}
+.p-purple{background:rgba(178,141,255,.13);color:var(--purple);border:1px solid rgba(178,141,255,.4)}
+.p-green{background:rgba(126,217,87,.13);color:var(--green);border:1px solid rgba(126,217,87,.4)}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin:10px 0}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+/* diagram */
+.diagram{display:grid;gap:10px;margin:16px 0}
+.dg-row{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;justify-content:center}
+.dg-box{flex:1 1 180px;max-width:250px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;text-align:center;font-size:.86rem;position:relative;transition:.15s;cursor:default}
+.dg-box b{display:block;font-size:.95rem}
+.dg-box small{color:var(--muted)}
+.dg-box:hover{border-color:var(--blue);transform:translateY(-2px)}
+.dg-box.hot{border-color:var(--red)}
+.dg-arrow{text-align:center;color:var(--muted);font-size:1.1rem;line-height:1}
+/* rank list */
+.rank{display:flex;gap:14px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin:12px 0;transition:.15s}
+.rank:hover{border-color:var(--blue)}
+.rank .n{flex:0 0 44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;font-weight:800;color:#04121a;background:linear-gradient(120deg,var(--blue),var(--teal))}
+.rank.r1 .n{background:linear-gradient(120deg,var(--gold),#ff9f43)}
+.rank h3{margin:0 0 2px}
+.rank .meta{font-size:.8rem;color:var(--muted);margin-bottom:6px}
+.bar{height:8px;border-radius:999px;background:var(--panel2);overflow:hidden;margin:4px 0 2px;max-width:320px}
+.bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--teal))}
+.lens{border-left:4px solid var(--purple);padding-left:14px;margin:14px 0}
+.lens.k{border-color:var(--teal)} .lens.h{border-color:var(--blue)} .lens.r{border-color:var(--red)}
+.lens h3{margin-top:0}
+.quotebox{font-style:italic;color:var(--muted);margin:6px 0}
+.tag{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+kbd{background:var(--panel2);border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-size:.8em}
+.warn{background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.3);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:.92rem}
+.good{background:rgba(126,217,87,.07);border:1px solid rgba(126,217,87,.3);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:.92rem}
+footer{margin-top:40px;color:var(--muted);font-size:.8rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>my-wc26-bracket — analysis &amp; roadmap</h1>
+<p class="sub">What this codebase is, what three expert lenses found, the 5 plans that came out of it, and the lessons behind each decision. Generated July 7, 2026 — mid-tournament (R16 ends today, QFs start July 9).</p>
+<label class="eli5toggle"><input type="checkbox" id="eli5"> <span>🧒 ELI5 mode — show plain-English explanations everywhere</span></label>
+
+<nav id="nav">
+  <button data-tab="t-code" class="on">🗺️ The codebase</button>
+  <button data-tab="t-lens">🔬 Expert lenses</button>
+  <button data-tab="t-plans">🏆 The 5 plans</button>
+  <button data-tab="t-how">🧠 How I analyzed</button>
+  <button data-tab="t-learn">🎓 Learning moments</button>
+</nav>
+
+<!-- ============================ TAB 1: CODEBASE ============================ -->
+<section class="tab on" id="t-code">
+<h2>What this thing is</h2>
+<p>A <b>zero-backend World Cup bracket dashboard</b>. A user drops in their Excel bracket (or clicks winners in a builder); the browser parses it, scores it against live results, and renders a full dashboard. A GitHub Action fetches real results from FIFA 3×/day and commits them to one JSON file. GitHub Pages serves everything static. ~3,100 lines total, no build step, no npm dependencies.</p>
+
+<div class="eli5">🧒 <b>ELI5:</b> Imagine a scoreboard poster that redraws itself. You hand it your list of guesses once. A robot mailman drops off a note with the real game scores three times a day. Your own web browser does all the math and drawing — nothing about your guesses ever leaves your computer.</div>
+
+<h2>Data flow</h2>
+<div class="diagram">
+  <div class="dg-row">
+    <div class="dg-box"><b>FIFA public API</b><small>free, no key</small></div>
+    <div class="dg-box"><b>football-data.org</b><small>automatic fallback</small></div>
+  </div>
+  <div class="dg-arrow">▼ 3×/day (GitHub Actions cron)</div>
+  <div class="dg-row">
+    <div class="dg-box"><b>fetch_results.py</b><small>1,033 lines · normalize names, match to bracket, write highlights</small></div>
+  </div>
+  <div class="dg-arrow">▼ commits</div>
+  <div class="dg-row">
+    <div class="dg-box hot"><b>results.json</b><small>⚠️ the ONE shared artifact every visitor depends on — committed with no validation today</small></div>
+    <div class="dg-box"><b>topology.json</b><small>fixed bracket structure (never changes)</small></div>
+    <div class="dg-box"><b>your .xlsx / builder</b><small>parsed 100% in-browser</small></div>
+  </div>
+  <div class="dg-arrow">▼ fetched / parsed by the browser</div>
+  <div class="dg-row">
+    <div class="dg-box"><b>render.js</b><small>725 lines · pure function (picks, live, topo) → HTML string</small></div>
+  </div>
+  <div class="dg-arrow">▼ injected, then</div>
+  <div class="dg-row">
+    <div class="dg-box"><b>interact.js</b><small>themes, search, favorites, SVG connectors, what-if toggles</small></div>
+  </div>
+</div>
+
+<h2>File map</h2>
+<table>
+<tr><th>File</th><th>Lines</th><th>Role</th><th>Health</th></tr>
+<tr><td><code>docs/js/render.js</code></td><td>725</td><td>Pure render engine, ported 1:1 from Python. Golden-tested for byte parity.</td><td><span class="pill p-teal">solid</span> <span class="pill p-gold">4 unescaped `note` sites</span></td></tr>
+<tr><td><code>scripts/fetch_results.py</code></td><td>1,033</td><td>Results sync: dual-source with fallback, penalty/AET handling, highlight-card writer.</td><td><span class="pill p-teal">thoughtful</span> <span class="pill p-red">output never validated</span></td></tr>
+<tr><td><code>docs/js/builder.js</code></td><td>183</td><td>Click-to-pick bracket builder. Pure core (<code>deriveStructure / teamsFor / repair / buildPicks</code>) + overlay UI.</td><td><span class="pill p-teal">clean split</span></td></tr>
+<tr><td><code>docs/js/interact.js</code></td><td>119</td><td>Interaction layer, extracted verbatim from the upstream Python repo's JS constant.</td><td><span class="pill p-gold">mouse-only stat cards</span></td></tr>
+<tr><td><code>docs/js/parse-excel.js</code></td><td>107</td><td>Workbook → picks with specific validation messages, then cross-checked against topology.</td><td><span class="pill p-teal">good errors</span></td></tr>
+<tr><td><code>docs/js/main.js</code></td><td>101</td><td>Glue: load data, wire buttons, show dashboard.</td><td><span class="pill p-gold">no r.ok checks · demo wipes what-ifs</span></td></tr>
+<tr><td><code>docs/js/storage.js</code></td><td>43</td><td>localStorage save/load/export; hashes brackets to namespace what-if edits.</td><td><span class="pill p-teal">careful</span></td></tr>
+<tr><td><code>tests/*.mjs</code> ×4</td><td>210</td><td>Golden snapshot, parser E2E, builder, and a 3000-bracket property test of scoring.</td><td><span class="pill p-red">never run in CI · 2 of 4 need files outside the repo</span></td></tr>
+</table>
+
+<div class="eli5">🧒 <b>ELI5 — what's a "pure function" and why care?</b> <code>render.js</code> is like a vending machine: same coins in → same snack out, every time, no surprises. That's why you can test it by just comparing its output text to a saved copy. If it secretly checked the time or the weather, testing would be much harder.</div>
+
+<h2>What's genuinely good here (worth protecting)</h2>
+<div class="good">✅ <b>The scoring property test</b> (<code>tests/scoring.mjs</code>) builds an <i>independent</i> scorer from first principles and checks the engine against it on 3,000 random brackets, plus the invariant that points always sum to 80. This is the strongest test in the repo.<br>
+✅ <b>The sync is defensive</b>: dual sources with auto-fallback, never clobbers a decided result, dedupes the "two teams met twice" case by date, guards shootout-score mangling, opens a GitHub issue on failure.<br>
+✅ <b>No build step</b>: <code>cd docs && python3 -m http.server</code> is the whole dev loop.</div>
+
+<h2>The three problems that matter most</h2>
+<div class="warn">⚠️ <b>1. The tests are decoration.</b> No CI runs them. The golden test needs <code>/tmp/py_sections.json</code> (from another repo's Python), the parse test needs a private <code>.xlsx</code> at an absolute path on this Mac. A bad commit to render.js ships to every visitor unchecked — during a live tournament.</div>
+<div class="warn">⚠️ <b>2. results.json is a single point of failure with no gate.</b> The bot commits whatever the pipeline produces. And the scariest failure isn't a crash — it's <i>silence</i>: if FIFA renames a team and <code>team_map.json</code> lacks the alias, that match simply never resolves. No error, no issue, the bracket just stops updating.</div>
+<div class="warn">⚠️ <b>3. Freshness is oversold.</b> The page says "Live · updated …" but syncs run at 3 fixed times a day. On July 9 (QF day), a 2 PM result can sit hidden until the 6 PM sync — and the UI gives no hint it's stale.</div>
+</section>
+
+<!-- ============================ TAB 2: LENSES ============================ -->
+<section class="tab" id="t-lens">
+<h2>Three expert lenses</h2>
+<p class="sub">I first drafted a top-5 from raw code reading, then re-examined it through how three well-known engineers think. Each lens killed or promoted items. (These are my applications of their public philosophies — not quotes.)</p>
+
+<div class="lens k">
+<h3>🧪 Andrej Karpathy — simplicity, data quality, tests that actually run</h3>
+<p class="quotebox">"A test you don't run is a comment. The data pipeline IS the product. Keep the whole thing small enough to hold in your head."</p>
+<ul>
+<li><b>Would praise:</b> no-build vanilla JS, the pure render function, the property-based scoring test (3,000 random brackets — very his style).</li>
+<li><b>Would call out:</b> the golden test's dependency on a Python dump in <code>/tmp</code> — the parity project is <i>done</i>; freeze the output as a repo-owned snapshot and let the JS engine own its future. And validate the synced data — garbage in results.json means a wrong scoreboard for every visitor, which no amount of UI polish fixes.</li>
+<li><b>Effect on the list:</b> promoted the CI/hermetic-tests work from "chore" to #1; killed a half-baked "rewrite render.js into components" idea (churn, no user value, breaks the parity guarantee for nothing).</li>
+</ul>
+</div>
+
+<div class="lens h">
+<h3>🔗 Scott Hanselman — the URL is the app; sharing is the feature; a11y is table stakes</h3>
+<p class="quotebox">"The most powerful database is the URL. If your users are in a pool together, the product is the *between-people* part. And if it doesn't work with a keyboard, it doesn't work."</p>
+<ul>
+<li><b>Would praise:</b> privacy story ("your file never leaves the browser") told honestly; focus-visible styles and reduced-motion already in the CSS.</li>
+<li><b>Would call out:</b> a bracket is 31 bits — why is sharing it a JSON-file-and-instructions ritual? Put it in the URL hash. The pool is social but the app is single-player: no compare, no standings between Rob's manual updates. Stat cards are hover-only — keyboard and touch users get nothing.</li>
+<li><b>Effect on the list:</b> created plan #3 (share links) and #4 (compare/leaderboard) as distinct, sequenced pieces; folded a11y into a concrete hardening plan instead of a vague "improve accessibility" item.</li>
+</ul>
+</div>
+
+<div class="lens r">
+<h3>🛡️ Mark Russinovich — failure modes, blast radius, silent failure is the enemy</h3>
+<p class="quotebox">"Ask: what's the blast radius when this fails? Who notices, and when? The failures that hurt aren't the crashes — they're the ones that produce nothing."</p>
+<ul>
+<li><b>Would praise:</b> idempotent sync, issue-on-failure step, dual-source fallback, deterministic JSON writes for minimal diffs.</li>
+<li><b>Would call out:</b> the commit path has no schema gate (validate <i>before</i> publish, not after users see it); the team-name-mapping gap fails by <i>absence</i> — build a detector that notices a finished knockout game that matched nothing; increasing cron frequency naively would create 26 no-op commits+deploys a day (observability noise that buries signal).</li>
+<li><b>Effect on the list:</b> added the validator gate to plan #1, and the stall detector + commit-throttle to plan #2. Also the insight that the freshness chip must live <i>outside</i> the golden-tested render path.</li>
+</ul>
+</div>
+
+<div class="eli5">🧒 <b>ELI5 — why three lenses?</b> It's like asking a chef, a waiter, and a fire marshal to walk through the same restaurant. The chef checks the kitchen (code &amp; data quality), the waiter checks the guest experience (sharing, accessibility), the fire marshal checks what burns down and who smells the smoke (failure modes). Same room, three different dangers spotted.</div>
+
+<h2>How the lenses changed the original list</h2>
+<table>
+<tr><th>Before (raw reading)</th><th>After (lens-refined)</th><th>Why it changed</th></tr>
+<tr><td>"Add CI eventually"</td><td><b>#1 CI safety net + data gate</b></td><td>Karpathy: unrun tests are comments. Russinovich: gate the publish path. It's also the prerequisite for editing render.js safely.</td></tr>
+<tr><td>"Sync more often"</td><td><b>#2 Freshness (cron + honest chip + stall detector)</b></td><td>Russinovich reframed it: frequency without stall detection and commit-throttling just moves the failure around.</td></tr>
+<tr><td>"Some way to share"</td><td><b>#3 Share links (URL hash, 31 bits)</b></td><td>Hanselman: zero-backend sharing is this architecture's superpower, not an add-on.</td></tr>
+<tr><td>"Leaderboard someday"</td><td><b>#4 Compare brackets (client-side)</b></td><td>Scoped to reuse <code>computeState</code> + share-link decoding; suddenly it's ~250 lines, not a project.</td></tr>
+<tr><td>"Misc cleanups"</td><td><b>#5 Hardening & a11y (5 named fixes)</b></td><td>All three lenses each contributed one: escaping (R), demo data-loss (K: data integrity), keyboard cards (H).</td></tr>
+</table>
+</section>
+
+<!-- ============================ TAB 3: PLANS ============================ -->
+<section class="tab" id="t-plans">
+<h2>The 5 plans, ranked by leverage</h2>
+<p class="sub">Leverage = (value to users × risk removed) ÷ effort, weighted by the tournament clock. Each plan is a standalone <code>PLAN-*.md</code> in the repo root, written so a less capable model can execute it without questions.</p>
+
+<div class="rank r1">
+  <div class="n">1</div>
+  <div style="flex:1">
+    <h3>PLAN-ci-safety-net.md — hermetic tests + gated data pipeline</h3>
+    <div class="meta">Effort: ~half a day · Files: tests/*, scripts/validate_results.py, 2 workflows · <span class="pill p-red">do first</span></div>
+    <div class="bar"><i style="width:100%"></i></div>
+    <p>Freeze the golden test into a repo-owned snapshot (with <b>frozen inputs</b> — the live results.json churns 3×/day and would break a naive snapshot). Make the private-workbook test skip cleanly. Run everything in Actions. Add a stdlib Python validator that must pass <b>before</b> the sync bot commits.</p>
+    <p><span class="tag">Why #1</span> — It de-risks every other plan (three of them touch the render/glue path) and it's the only one that protects the site <i>this week</i> against a bad feed or a bad commit. Insurance is cheapest before the storm: QFs start July 9.</p>
+    <div class="eli5">🧒 <b>ELI5:</b> Right now the smoke detectors are in a drawer. Plan 1 screws them to the ceiling (CI) and adds a taste-tester who checks the robot mailman's letters before they're pinned to the fridge (the validator).</div>
+  </div>
+</div>
+
+<div class="rank">
+  <div class="n">2</div>
+  <div style="flex:1">
+    <h3>PLAN-match-day-freshness.md — denser sync, honest staleness, stall detection</h3>
+    <div class="meta">Effort: ~half a day · Files: fetch_results.py, sync workflow, index.html, main.js · <span class="pill p-gold">time-sensitive (Jul 9)</span></div>
+    <div class="bar"><i style="width:88%"></i></div>
+    <p>Cron every 30 min in the match window; a truthful "results updated 23m ago" chip (computed client-side from a new <code>refreshed_iso</code>, living in the viewer bar — <b>not</b> in the golden-locked render output); throttle stamp-only commits; detect finished knockout games that matched no bracket fixture (the silent team_map gap).</p>
+    <p><span class="tag">Why #2</span> — during the QFs "is this current?" is the entire user experience, and the silent-stall detector covers the one failure mode that today would never be noticed by anyone.</p>
+    <div class="eli5">🧒 <b>ELI5:</b> The robot mailman now comes every half hour on game days, the fridge note gets a timestamp sticker, and there's an alarm for the case where a letter arrives addressed to a name nobody recognizes (so it would otherwise go in the bin unnoticed).</div>
+  </div>
+</div>
+
+<div class="rank">
+  <div class="n">3</div>
+  <div style="flex:1">
+    <h3>PLAN-share-links.md — your whole bracket in a URL</h3>
+    <div class="meta">Effort: ~1 day · Files: NEW share.js, main.js, index.html, NEW test · <span class="pill p-blue">biggest product win</span></div>
+    <div class="bar"><i style="width:75%"></i></div>
+    <p>A bracket is exactly 31 binary choices + name + tiebreaker → ~80 chars of base64 in the URL hash. "Share link" button; opening a link renders the sender's dashboard <b>view-only</b> (never clobbering the visitor's own saved bracket). Zero backend; the privacy promise holds.</p>
+    <p><span class="tag">Why #3</span> — highest joy-per-line-of-code in the repo, and #4 depends on its decoder. After freshness, because a wrong-but-shareable scoreboard is worse than an unshareable right one.</p>
+    <div class="eli5">🧒 <b>ELI5:</b> Your 31 guesses are just 31 coin flips — heads or tails per game. That's so little information it fits inside the web address itself, like writing your locker combination on the invite instead of mailing the whole locker.</div>
+  </div>
+</div>
+
+<div class="rank">
+  <div class="n">4</div>
+  <div style="flex:1">
+    <h3>PLAN-compare-brackets.md — client-side mini-leaderboard</h3>
+    <div class="meta">Effort: ~1 day · Files: NEW compare.js, main.js, index.html, NEW test · depends on #3</div>
+    <div class="bar"><i style="width:60%"></i></div>
+    <p>Import colleagues' brackets (JSON or share-link), rank everyone by confirmed points (reusing the exported pure <code>computeState</code>), and show a "where we differ" list for the games still to play, sorted by points at stake.</p>
+    <p><span class="tag">Why #4</span> — the pool's actual social loop ("am I beating Dave?") with no server. Ranked below #3 only because it builds on it and touches more UI surface.</p>
+    <div class="eli5">🧒 <b>ELI5:</b> Everyone brings their guess-sheet to your kitchen table and you line them up side by side. Nothing leaves the kitchen — your browser does the ranking.</div>
+  </div>
+</div>
+
+<div class="rank">
+  <div class="n">5</div>
+  <div style="flex:1">
+    <h3>PLAN-hardening-a11y.md — five small fixes that close real holes</h3>
+    <div class="meta">Effort: ~half a day, five independent commits · Files: render.js, main.js, storage.js, interact.js</div>
+    <div class="bar"><i style="width:45%"></i></div>
+    <p>(1) escape the 4 unescaped <code>note</code> interpolations — byte-neutral today, which is exactly why it's safe; (2) stop the demo button from silently wiping your what-if edits (a real data-loss bug); (3) stat cards on keyboard focus/touch; (4) <code>r.ok</code> checks + offline cache fallback; (5) <code>aria-live</code> on the search count.</p>
+    <p><span class="tag">Why #5</span> — real but small; none blocks the others; each is a clean single-commit fix.</p>
+    <div class="eli5">🧒 <b>ELI5:</b> Tightening five loose screws you found while walking the house: none is an emergency, but one of them (the demo wipe) is quietly eating people's homework.</div>
+  </div>
+</div>
+
+<h2>Dependency & sequence</h2>
+<div class="card">
+<b>1 → 2 → 3 → 4</b>, with <b>5</b> anytime after 1.<br><br>
+• #1 first because #2 adds a JSON key (the validator must tolerate it — already specified), #3/#5 touch code the snapshot protects, and everything deserves CI before the QFs.<br>
+• #2 before July 9 for maximum payoff.<br>
+• #4 imports #3's decoder.<br>
+• #5's fix-2 (what-if stash) shares a mechanism with #3's view-only mode — whichever lands second reuses it.
+</div>
+</section>
+
+<!-- ============================ TAB 4: HOW ============================ -->
+<section class="tab" id="t-how">
+<h2>How I actually analyzed this (the method, reusable)</h2>
+<details open><summary><span class="pill p-blue">Step 1</span> Read everything, smallest surface first</summary><div class="body">
+<p>27 files, ~3,100 lines — small enough to read <i>all</i> of it rather than sample. Order: README (claims) → main.js (glue reveals architecture) → parse/storage/interact → render.js → fetch_results.py → tests → workflows → data shapes. Reading tests early paid off twice: they document intent (<i>"proves byte-parity"</i>) and their <i>dependencies</i> exposed finding #1 (paths outside the repo = can never run in CI).</p>
+<div class="eli5">🧒 <b>ELI5:</b> Before rearranging a room, walk through the whole house once. The README says what the owners <i>think</i> the house is; the wiring (tests, workflows) tells you what it actually is.</div>
+</div></details>
+
+<details><summary><span class="pill p-blue">Step 2</span> Check the ground truth: issues, TODOs, git log, live data</summary><div class="body">
+<p>No open issues, no TODO/FIXME comments — unusual, and it means priorities must come from code reading, not a backlog. The git log showed active, careful iteration (a scoring-accuracy test added days ago). The data files showed <b>where the tournament actually stands</b> (23 results in, M96 today, <code>ko_fix</code> already carrying QF kickoffs) — which turned "sync frequency" from a nice-to-have into a deadline item.</p>
+<div class="eli5">🧒 <b>ELI5:</b> I checked the calendar before planning the party. "The quarterfinals are in two days" changes what you do first.</div>
+</div></details>
+
+<details><summary><span class="pill p-blue">Step 3</span> Run what can be run</summary><div class="body">
+<p>Ran <code>scoring.mjs</code> (passes — 3,001 brackets) and <code>builder.mjs</code> (passes). Confirmed the two external test dependencies exist <i>on this machine only</i>. Verified line-level claims before writing them into plans (e.g. grepped the exact unescaped <code>note</code> sites; checked the CSS already has <code>prefers-reduced-motion</code> so the a11y plan wouldn't re-do existing work).</p>
+<div class="eli5">🧒 <b>ELI5:</b> Don't just read the recipe — taste the soup. Two tests passed on my stove; two only work in the author's kitchen. That gap <i>is</i> finding #1.</div>
+</div></details>
+
+<details><summary><span class="pill p-blue">Step 4</span> Apply the three lenses, then re-rank</summary><div class="body">
+<p>Each lens is a question you ask the same facts: <b>K</b>: "does the feedback loop actually run? is the data trustworthy?" <b>H</b>: "where's the human/social/URL leverage?" <b>R</b>: "what fails silently, and what's the blast radius?" The final ranking is where the lenses <i>agree</i>: all three point at the unguarded results.json path first.</p>
+</div></details>
+
+<details><summary><span class="pill p-blue">Step 5</span> Write plans for a weaker executor</summary><div class="body">
+<p>Each plan states goal → exact files → ordered steps → <b>the traps</b> → verifiable acceptance criteria. The traps section is the point: a capable model discovers "the snapshot must freeze its inputs because a bot rewrites results.json 3×/day" by itself, painfully, after CI goes red; a plan that says it up front makes the weaker model succeed on the first pass. Acceptance criteria are all commands or observable behaviors — no "should work correctly".</p>
+<div class="eli5">🧒 <b>ELI5:</b> Good instructions for a new helper aren't just "build the shelf" — they're "the third screw strips easily, turn it gently." The traps are the whole value of experience.</div>
+</div></details>
+</section>
+
+<!-- ============================ TAB 5: LEARNING ============================ -->
+<section class="tab" id="t-learn">
+<h2>Learning moments 🎓</h2>
+<p class="sub">Six transferable ideas from this codebase — each with the concrete instance here, the general principle, and an ELI5.</p>
+
+<details open><summary>1 · A test you don't run is a comment</summary><div class="body">
+<p><b>Here:</b> four decent test files, zero CI. The golden test even requires dumping a file from a <i>different repo's</i> Python — so it silently stopped being run the moment porting finished.</p>
+<p><b>Principle:</b> a test's value is its <i>execution frequency</i> × its ability to fail. Hermetic (no outside-the-repo inputs) is what makes frequent execution possible. Whenever you see a test with an absolute path in it, you've found a test that will quietly die.</p>
+<div class="eli5">🧒 A fire drill you never run is just a poster on the wall. And a drill that requires borrowing the neighbor's keys will never be run.</div>
+</div></details>
+
+<details><summary>2 · Snapshot tests must freeze their inputs, not just their outputs</summary><div class="body">
+<p><b>Here:</b> the obvious "commit the golden output as a fixture" fix has a booby trap: the render input (<code>results.json</code>) is rewritten by a bot 3×/day. Snapshot the output alone and CI turns red at 6 PM every day.</p>
+<p><b>Principle:</b> a snapshot is a statement "<i>f(frozen input) = frozen output</i>". If any input keeps moving, you haven't frozen a function — you've frozen a moment. This is the single most common way snapshot testing fails in the wild (timestamps, locales, live data).</p>
+<div class="eli5">🧒 A photo of your sandcastle only proves it's unchanged if the tide isn't coming in. Photograph the castle <i>and</i> bottle the tide.</div>
+</div></details>
+
+<details><summary>3 · The deadliest failure is silence (absence, not error)</summary><div class="body">
+<p><b>Here:</b> if FIFA's feed spells a team differently than <code>team_map.json</code> expects, the match result simply never attaches to the bracket. No exception, no failed workflow, no issue. The dashboard just… stops moving, and looks exactly like "no games played yet".</p>
+<p><b>Principle:</b> error handling catches things that <i>happen</i>; you also need detectors for things that <i>should have happened and didn't</i>. The trick is finding an observable proxy — here: "a finished knockout game in the feed that matched no bracket fixture" is loud, cheap, and specific. (And it needs a whitelist: the third-place playoff legitimately matches nothing!)</p>
+<div class="eli5">🧒 A smoke alarm tells you about fire. Nothing tells you the mailman stopped coming — unless you write down "mail should arrive daily" and check. Silence needs its own alarm.</div>
+</div></details>
+
+<details><summary>4 · Validate at the boundary you control, before publishing</summary><div class="body">
+<p><b>Here:</b> the sync bot commits results.json straight to the branch that Pages serves. The validator goes <i>between</i> fetch and commit: a bad feed then fails the workflow (which already opens an issue) and visitors keep yesterday's good data instead of today's garbage.</p>
+<p><b>Principle:</b> every pipeline has one moment where data crosses from "mine, checkable" to "published, everyone's problem". Gate that moment. Post-hoc monitoring tells you users were hurt; a gate means they weren't.</p>
+<div class="eli5">🧒 Taste the soup in the kitchen, not by watching the customers' faces.</div>
+</div></details>
+
+<details><summary>5 · Know which of your outputs are byte-locked — and route around them</summary><div class="body">
+<p><b>Here:</b> render.js output is protected by a byte-exact snapshot. So the freshness chip goes in the viewer bar (main.js territory), the <code>aria-live</code> attribute is set on the DOM <i>after</i> injection, and the new JSON key is one render.js never reads. Meanwhile escaping <code>note</code> IS safe inside the locked zone — because for all current values it's byte-neutral, and the passing snapshot <i>proves</i> it.</p>
+<p><b>Principle:</b> strong guarantees (byte parity, API contracts, wire formats) are walls. Good changes either go around the wall, or demonstrably don't touch it. Knowing which is which is most of the skill.</p>
+<div class="eli5">🧒 There's a "fresh paint" wall in the house. You can hang things on every other wall, and you can touch the painted one only if your hands are provably clean — the paint check (the test) tells you.</div>
+</div></details>
+
+<details><summary>6 · Count the bits before you build the feature</summary><div class="body">
+<p><b>Here:</b> "share your bracket" sounds like accounts, a database, uploads. But a bracket is 31 binary choices — under 4 bytes of information. That fits in a URL with room to spare, so sharing needs zero infrastructure and the privacy promise survives intact. The same counting killed fancier encodings: base64-of-JSON is 80 chars and debuggable; bit-packing saves 40 chars nobody needs.</p>
+<p><b>Principle:</b> before designing a system, measure the information actually flowing. Tiny state → the URL is your database. It's the highest-leverage sizing question in product engineering.</p>
+<div class="eli5">🧒 You don't rent a moving truck for a house key. Count what you're actually carrying first — sometimes it fits in your pocket (the web address).</div>
+</div></details>
+
+<details><summary>Bonus · The demo-wipe bug: convenience features can eat user data</summary><div class="body">
+<p><b>Here:</b> the what-if overrides are namespaced per-bracket by hash (smart!), but "view the demo" runs the same reset path as "upload a new bracket" — so a <i>preview</i> destroys real edits. The plan fixes it with a stash/restore rather than skipping the reset, because the reset is still correct for genuine replacements.</p>
+<p><b>Principle:</b> whenever a destructive cleanup is triggered by state-change detection, list every path that changes the state. Previews, demos, and "just looking" flows are the classic false positives.</p>
+<div class="eli5">🧒 The robot vacuum is great — until it eats the LEGO castle you left on the floor "just for a minute". Teach it the difference between mess and a work-in-progress.</div>
+</div></details>
+
+<h2>If you remember one thing</h2>
+<div class="card" style="border-color:var(--gold)">
+<b>Leverage lives where risk, timing, and effort intersect.</b> The five plans aren't the five coolest features — they're the order in which a live system with real users this week gets safer (1), more honest (2), more social (3, 4), and more solid (5). The tournament clock reshuffled what "best" means: the same list, analyzed in August, would rank differently.
+</div>
+</section>
+
+<footer>Generated by Claude Code · July 7, 2026 · Companion files: PLAN-ci-safety-net.md · PLAN-match-day-freshness.md · PLAN-share-links.md · PLAN-compare-brackets.md · PLAN-hardening-a11y.md</footer>
+</div>
+
+<script>
+document.querySelectorAll("#nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll("section.tab").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
+  window.scrollTo({ top: 0 });
+}));
+document.getElementById("eli5").addEventListener("change", e =>
+  document.body.classList.toggle("eli5-on", e.target.checked));
+</script>
+</body>
+</html>

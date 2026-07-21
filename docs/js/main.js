@@ -6,18 +6,48 @@ import { savePicks, loadPicks, clearPicks, exportPicks, resetWhatIfsIfChanged } 
 import { parseWorkbook, validateAgainstTopology, ValidationError } from "./parse-excel.js";
 import { openBuilder } from "./builder.js";
 import { buildShareUrl, readShareFromUrl } from "./share.js";
+import { initMatchDetails } from "./match-details.js";
 
 const $ = (s) => document.querySelector(s);
 let TOPO = null, LIVE = null;
+let DETAILS_STATE = { ok: false, data: null, error: new Error("Not loaded") };
+let PORTRAIT_STATE = { ok: false, data: null, error: new Error("Not loaded") };
 let CURRENT = null, IS_SHARED = false;
 const DEFAULT_TITLE = document.title;
 
+function teardownTrophies() {
+  (window.__trophyTeardowns || []).forEach(teardown => teardown());
+  window.__trophyTeardowns = [];
+  window.__trophyGeneration = (window.__trophyGeneration || 0) + 1;
+  return window.__trophyGeneration;
+}
+
 async function loadData() {
-  const [t, l] = await Promise.all([
+  const optionalJson = async (url) => {
+    try {
+      const response = await fetch(url, { cache: "no-cache" });
+      if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+      return { ok: true, data: await response.json(), error: null };
+    } catch (error) {
+      return { ok: false, data: null, error };
+    }
+  };
+  const [t, l, details, portraits] = await Promise.all([
     fetch("data/topology.json").then(r => r.json()),
     fetch("data/results.json", { cache: "no-cache" }).then(r => r.json()),
+    optionalJson("data/match-details.json"),
+    optionalJson("data/match-portraits.json"),
   ]);
   TOPO = t; LIVE = l;
+  DETAILS_STATE = details;
+  PORTRAIT_STATE = portraits;
+}
+
+function teardownMatchDetails() {
+  if (typeof window.__matchDetailsCleanup === "function") {
+    window.__matchDetailsCleanup();
+  }
+  window.__matchDetailsCleanup = null;
 }
 
 function showDashboard(picks, opts = {}) {
@@ -25,6 +55,7 @@ function showDashboard(picks, opts = {}) {
   const isDemo = !!opts.demo;
   CURRENT = picks;
   IS_SHARED = !!shared;
+  teardownMatchDetails();
   if (!shared) resetWhatIfsIfChanged(picks);   // don't touch a visitor's own scratch when just viewing a link
   const app = $("#app");
   app.innerHTML = renderDashboard(picks, LIVE, TOPO);
@@ -44,6 +75,30 @@ function showDashboard(picks, opts = {}) {
   document.title = shared ? `${poss} bracket \u2014 World Cup 2026` : DEFAULT_TITLE;
 
   initInteractions();                                  // run the verbatim interaction layer
+  window.__matchDetailsCleanup = initMatchDetails(
+    app,
+    DETAILS_STATE,
+    PORTRAIT_STATE,
+  );
+  const trophyGeneration = teardownTrophies();
+  const trophySlots = [...document.querySelectorAll("[data-trophy]")];
+  if (trophySlots.length) {
+    import("./trophy.js").then(module => {
+      if (window.__trophyGeneration !== trophyGeneration) return;
+      window.__trophyTeardowns = trophySlots
+        .filter(slot => slot.isConnected)
+        .map(slot => module.initTrophy(slot));
+    }).catch(() => {
+      if (window.__trophyGeneration !== trophyGeneration) return;
+      trophySlots.filter(slot => slot.isConnected).forEach(slot => {
+        const fallback = document.createElement("img");
+        fallback.className = "trophy-fallback";
+        fallback.src = "assets/trophy-fallback.svg";
+        fallback.alt = "";
+        slot.replaceChildren(fallback);
+      });
+    });
+  }
   if (window.__drawConn) setTimeout(window.__drawConn, 90);  // initial connector draw
   window.scrollTo(0, 0);
 }
@@ -152,6 +207,8 @@ function leaveShared() {
 }
 
 function showLanding() {
+  teardownMatchDetails();
+  teardownTrophies();
   CURRENT = null; IS_SHARED = false; document.title = DEFAULT_TITLE;
   const app = $("#app"); app.hidden = true; app.innerHTML = "";
   $("#viewerbar").hidden = true; $("#dab").hidden = true;

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Glass + Motion preview — My WC26 Bracket</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
+<!-- Reuse the real dashboard theme (colors, fonts, tokens) verbatim -->
+<link rel="stylesheet" href="css/dashboard.css">
+<style>
+/* ============================================================
+   GLASS + MOTION PREVIEW
+   Everything here layers ON TOP of the existing theme tokens
+   from dashboard.css. No colors, fonts, or theme values are
+   changed — we only borrow --grad, --blue, --teal, --win, etc.
+   ============================================================ */
+
+/* Let the moving background show through the app surface. */
+body{ background:#0e0d11; }
+
+/* ---- Moving background stack (behind everything) ---- */
+.bg{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+.bg .video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  opacity:.42; filter:saturate(1.05) contrast(1.02); }
+/* Dark + blue/teal tint keeps the video firmly on-theme and text readable. */
+.bg .tint{ position:absolute; inset:0;
+  background:
+    radial-gradient(60% 55% at 18% 8%,  rgba(0,151,244,.28), transparent 60%),
+    radial-gradient(55% 55% at 88% 92%, rgba(0,178,145,.24), transparent 60%),
+    linear-gradient(180deg, rgba(14,13,17,.68) 0%, rgba(14,13,17,.80) 55%, rgba(14,13,17,.92) 100%); }
+/* Slowly drifting blue/teal blobs — the "movement" even without the video. */
+.bg .drift{ position:absolute; inset:-25%; filter:blur(46px); opacity:.7; mix-blend-mode:screen;
+  background:
+    radial-gradient(closest-side, var(--g1), transparent) 6% 12%/48% 70% no-repeat,
+    radial-gradient(closest-side, var(--g2), transparent) 92% 8%/46% 62% no-repeat,
+    radial-gradient(closest-side, var(--g3), transparent) 55% 108%/56% 68% no-repeat;
+  animation:drift 30s ease-in-out infinite alternate; }
+@keyframes drift{
+  0%  { transform:translate3d(-3%,-2%,0) scale(1);    }
+  50% { transform:translate3d(3%, 1%, 0) scale(1.08); }
+  100%{ transform:translate3d(2%, 4%, 0) scale(1.14); }
+}
+
+/* Keep real content above the background. */
+.wrap{ position:relative; z-index:2; }
+
+/* ============================================================
+   LIQUID GLASS  (Bloom-style gradient-border frosting, tuned
+   for this dark blue/teal theme instead of pure-white borders)
+   ============================================================ */
+.lglass, .lglass-strong{
+  position:relative; overflow:hidden; border:none;
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.028);
+  background-blend-mode:luminosity;
+  box-shadow:var(--shadow), inset 0 1px 1px rgba(255,255,255,.10);
+}
+.lglass{ -webkit-backdrop-filter:blur(16px) saturate(1.25); backdrop-filter:blur(16px) saturate(1.25); }
+.lglass-strong{ -webkit-backdrop-filter:blur(40px) saturate(1.3); backdrop-filter:blur(40px) saturate(1.3);
+  box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.14); }
+
+/* Gradient border via masked ::before — top-lit white with a teal kiss at the base. */
+.lglass::before, .lglass-strong::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.4px; pointer-events:none;
+  background:linear-gradient(160deg,
+    rgba(255,255,255,.55) 0%,
+    rgba(255,255,255,.14) 22%,
+    transparent 45%,
+    transparent 62%,
+    rgba(0,178,145,.30) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor; mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+}
+.lglass-strong::before{
+  background:linear-gradient(160deg,
+    rgba(255,255,255,.62) 0%,
+    rgba(255,255,255,.18) 22%,
+    transparent 45%,
+    transparent 62%,
+    rgba(0,151,244,.34) 100%);
+}
+
+/* ---- Preview layout ---- */
+.pv-top{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:20px; }
+.pv-badge{ display:inline-flex; align-items:center; gap:8px; font-size:.72rem; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--win-ink); padding:6px 12px; border-radius:999px; }
+.pv-controls{ display:inline-flex; gap:8px; }
+.pv-controls button{ font-family:inherit; font-size:.8rem; font-weight:700; color:var(--text); cursor:pointer;
+  border:none; border-radius:999px; padding:8px 14px; transition:transform .16s; }
+.pv-controls button:hover{ transform:translateY(-1px); }
+
+.hero.pv-hero{ padding:38px 36px 32px; margin-bottom:22px; }
+.hero.pv-hero .sub{ margin-top:.5em; }
+.cta-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:22px; }
+.pbtn{ font-family:inherit; font-weight:700; font-size:.96rem; border:0; border-radius:13px; padding:12px 22px; cursor:pointer;
+  color:#04121a; background:var(--grad); box-shadow:0 10px 26px rgba(0,151,244,.34); transition:transform .16s; }
+.pbtn:hover{ transform:translateY(-2px) scale(1.02); }
+.pbtn:active{ transform:translateY(0) scale(.99); }
+.pbtn.ghost{ color:var(--text); background:rgba(255,255,255,.06); box-shadow:none; border:1px solid var(--border2); }
+
+.stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px; }
+@media(max-width:900px){ .stat-row{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:520px){ .stat-row{ grid-template-columns:1fr; } }
+.stat{ padding:18px 20px; }
+.stat .s-lab{ font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.stat .s-val{ font-size:2rem; font-weight:800; line-height:1.05; margin:8px 0 4px;
+  background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.stat .s-sub{ font-size:.82rem; color:var(--text2); }
+.stat .s-sub b{ color:var(--win-ink); }
+
+.section-h{ display:flex; align-items:baseline; gap:12px; margin:6px 2px 14px; }
+.section-h h2{ font-size:1.15rem; font-weight:800; margin:0; }
+.section-h .sh-note{ font-size:.82rem; color:var(--muted); }
+
+.bracket-preview{ padding:22px 22px 24px; }
+.matches{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+@media(max-width:760px){ .matches{ grid-template-columns:1fr; } }
+.match{ padding:12px 14px; border-radius:var(--radius-sm); }
+.match .m-cap{ display:flex; justify-content:space-between; font-size:.66rem; font-weight:700; letter-spacing:.05em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.match .m-pick{ display:inline-flex; align-items:center; gap:4px; }
+.match .m-pick.ok{ color:var(--win-ink); }
+.match .m-pick.miss{ color:var(--lose-ink); }
+.team{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; font-weight:650; }
+.team + .team{ margin-top:4px; }
+.team .flag{ font-size:1.15rem; line-height:1; }
+.team .tn{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.team .sc{ font-variant-numeric:tabular-nums; font-weight:800; color:var(--text2); }
+.team.win{ background:linear-gradient(120deg, rgba(0,178,145,.26), rgba(0,151,244,.16)); }
+.team.win .tn{ color:#fff; }
+.team.lose{ opacity:.6; }
+.team.lose .tn{ text-decoration:line-through; }
+.pens{ font-size:.7rem; color:var(--muted); font-weight:700; }
+
+.pv-foot{ margin:26px 2px 0; font-size:.82rem; color:var(--muted); }
+.pv-foot code{ background:var(--hover); border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:.85em; }
+
+/* Respect reduced-motion: freeze the drift + video shimmer. */
+@media(prefers-reduced-motion:reduce){
+  .bg .drift{ animation:none; }
+}
+body.no-motion .bg .drift{ animation:none; }
+body.no-motion .bg .video{ display:none; }
+
+/* Compare toggle: flatten the glass to solid panels. */
+body.flat-glass .lglass, body.flat-glass .lglass-strong{
+  -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--panel);
+}
+body.flat-glass .lglass::before, body.flat-glass .lglass-strong::before{ display:none; }
+body.flat-glass .lglass, body.flat-glass .lglass-strong{ border:1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<!-- Moving background stack -->
+<div class="bg" id="bg">
+  <video class="video" id="bgv" autoplay loop muted playsinline preload="auto"
+    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4"></video>
+  <div class="tint"></div>
+  <div class="drift"></div>
+</div>
+
+<div class="wrap">
+
+  <div class="pv-top">
+    <span class="pv-badge lglass">✦ Design preview · glass + motion</span>
+    <div class="pv-controls">
+      <button class="lglass" id="toggleMotion">⏸ Motion</button>
+      <button class="lglass" id="toggleGlass">◑ Glass blur</button>
+    </div>
+  </div>
+
+  <!-- Top bar — reuses the real brand styling -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="orb"></span>
+      <div>Bring Your Own Bracket<small>World Cup 2026 · your live dashboard</small></div>
+    </div>
+    <span class="pill live"><span class="dot"></span>Live · auto-synced</span>
+  </header>
+
+  <!-- Hero on liquid glass -->
+  <section class="hero pv-hero lglass-strong">
+    <span class="eyebrow">Your World Cup 2026 Bracket</span>
+    <h1>Pick your bracket, <span class="g">watch it score itself</span></h1>
+    <p class="sub">Upload your filled-in <b>SLED World Cup 2026</b> Excel and get your own live dashboard —
+      or build a bracket right here in a couple of minutes. Everything stays in your browser.</p>
+    <div class="badges">
+      <span class="pill"><span class="dot"></span>🔒 In your browser</span>
+      <span class="pill"><span class="dot"></span>⚡ Scored live</span>
+      <span class="pill"><span class="dot"></span>💾 Saved on this device</span>
+    </div>
+    <div class="cta-row">
+      <button class="pbtn">Upload my Excel</button>
+      <button class="pbtn ghost">Build my bracket</button>
+    </div>
+  </section>
+
+  <!-- Stat cards -->
+  <section class="stat-row">
+    <div class="stat lglass"><div class="s-lab">Your points</div><div class="s-val">128</div><div class="s-sub"><b>+16</b> on match day</div></div>
+    <div class="stat lglass"><div class="s-lab">Correct picks</div><div class="s-val">22/32</div><div class="s-sub">69% hit rate</div></div>
+    <div class="stat lglass"><div class="s-lab">Champion pick</div><div class="s-val" style="font-size:1.5rem">🇦🇷 Argentina</div><div class="s-sub"><b>Still alive</b></div></div>
+    <div class="stat lglass"><div class="s-lab">Best round</div><div class="s-val" style="font-size:1.5rem">Round of 16</div><div class="s-sub">14 / 16 correct</div></div>
+  </section>
+
+  <!-- Bracket slice on liquid glass -->
+  <section class="bracket-preview lglass-strong">
+    <div class="section-h">
+      <h2>Round of 16</h2>
+      <span class="sh-note">your picks vs. real results</span>
+    </div>
+    <div class="matches">
+
+      <div class="match lglass">
+        <div class="m-cap"><span>Match 49</span><span class="m-pick ok">✓ your pick</span></div>
+        <div class="team win"><span class="flag">🇦🇷</span><span class="tn">Argentina</span><span class="sc">2</span></div>
+        <div class="team lose"><span class="flag">🇦🇺</span><span class="tn">Australia</span><span class="sc">1</span></div>
+      </div>
+
+      <div class="match lglass">
+        <div class="m-cap"><span>Match 50</span><span class="m-pick ok">✓ your pick</span></div>
+        <div class="team win"><span class="flag">🇫🇷</span><span class="tn">France</span><span class="sc">3</span></div>
+        <div class="team lose"><span class="flag">🇸🇳</span><span class="tn">Senegal</span><span class="sc">1</span></div>
+      </div>
+
+      <div class="match lglass">
+        <div class="m-cap"><span>Match 51</span><span class="m-pick miss">✕ you had England</span></div>
+        <div class="team win"><span class="flag">🇳🇱</span><span class="tn">Netherlands</span><span class="sc">2</span></div>
+        <div class="team lose"><span class="flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="tn">England</span><span class="sc">0</span></div>
+      </div>
+
+      <div class="match lglass">
+        <div class="m-cap"><span>Match 52</span><span class="m-pick ok">✓ your pick</span></div>
+        <div class="team win"><span class="flag">🇧🇷</span><span class="tn">Brazil</span><span class="sc">4</span></div>
+        <div class="team lose"><span class="flag">🇰🇷</span><span class="tn">South Korea</span><span class="sc">1</span></div>
+      </div>
+
+      <div class="match lglass">
+        <div class="m-cap"><span>Match 53</span><span class="m-pick ok">✓ your pick</span></div>
+        <div class="team win"><span class="flag">🇪🇸</span><span class="tn">Spain <span class="pens">(4–2 pens)</span></span><span class="sc">1</span></div>
+        <div class="team lose"><span class="flag">🇲🇦</span><span class="tn">Morocco</span><span class="sc">1</span></div>
+      </div>
+
+      <div class="match lglass">
+        <div class="m-cap"><span>Match 54</span><span class="m-pick ok">✓ your pick</span></div>
+        <div class="team win"><span class="flag">🇵🇹</span><span class="tn">Portugal</span><span class="sc">2</span></div>
+        <div class="team lose"><span class="flag">🇨🇭</span><span class="tn">Switzerland</span><span class="sc">0</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <p class="pv-foot">Preview only — this page reuses your real <code>css/dashboard.css</code> (same colours, theme
+    tokens &amp; <code>Segoe UI</code> font). The glass + moving globe backdrop can be folded into
+    <code>index.html</code> whenever you like. Toggle <b>Motion</b> to see the static fallback.</p>
+
+</div>
+
+<script>
+  // Tiny controls so you can compare on/off quickly.
+  const b = document.body;
+  document.getElementById('toggleMotion').addEventListener('click', () => {
+    b.classList.toggle('no-motion');
+  });
+  document.getElementById('toggleGlass').addEventListener('click', () => {
+    b.classList.toggle('flat-glass');
+  });
+  // Nudge autoplay in case the browser held it back.
+  const v = document.getElementById('bgv');
+  v && v.play && v.play().catch(() => {});
+</script>
+</body>
+</html>
